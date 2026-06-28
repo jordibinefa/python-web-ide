@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prova: Pyodide en Web Worker</title>
+<style>
+  :root{
+    --bg:#10151b;
+    --panel:#171d25;
+    --line:#2a323c;
+    --text:#dbe2e8;
+    --muted:#7c8794;
+    --accent:#5fd0a8;
+    --warn:#e0a85f;
+    --err:#e2706f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  header{
+    padding:18px 20px 6px;
+    border-bottom:1px solid var(--line);
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size:1.15rem;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:.85rem;
+  }
+  .status-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 20px;
+    font-size:.8rem;
+    color:var(--muted);
+    border-bottom:1px solid var(--line);
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--warn);
+    transition:background .2s;
+  }
+  .dot.ready{background:var(--accent);}
+  .dot.busy{background:var(--warn); animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .pulse-counter{
+    margin-left:auto;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size:.78rem;
+    color:var(--accent);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:3px 8px;
+  }
+  main{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:1px;
+    background:var(--line);
+  }
+  @media (max-width: 760px){
+    main{grid-template-columns: 1fr;}
+  }
+  .col{ background:var(--panel); padding:14px 16px; }
+  .col h2{
+    margin:0 0 8px;
+    font-size:.78rem;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--muted);
+  }
+  textarea{
+    width:100%;
+    min-height:160px;
+    background:#0d1218;
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size:.85rem;
+    line-height:1.45;
+    resize:vertical;
+  }
+  textarea.small{min-height:90px;}
+  .helper-block{margin-top:14px;}
+  button{
+    margin-top:10px;
+    background:var(--accent);
+    color:#08231a;
+    border:none;
+    border-radius:7px;
+    padding:9px 16px;
+    font-weight:600;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  button:disabled{opacity:.45; cursor:not-allowed;}
+  button.secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--line);
+  }
+  .console{
+    background:#0a0e13;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px;
+    min-height:260px;
+    max-height:420px;
+    overflow:auto;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size:.82rem;
+    white-space:pre-wrap;
+  }
+  .console .stdout{color:var(--text);}
+  .console .stderr{color:var(--err);}
+  .console .status{color:var(--muted); font-style:italic;}
+  footer{
+    padding:12px 20px 22px;
+    color:var(--muted);
+    font-size:.78rem;
+    border-top:1px solid var(--line);
+  }
+  footer code{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pyodide dins d'un Web Worker — prova de no-bloqueig</h1>
+  <p>El comptador de la cantonada superior dreta segueix avançant mentre el bucle Python s'executa: prova que el navegador no es queda penjat.</p>
+</header>
+
+<div class="status-row">
+  <span class="dot" id="statusDot"></span>
+  <span id="statusText">Carregant Pyodide al worker…</span>
+  <span class="pulse-counter" id="pulseCounter">batec: 0</span>
+</div>
+
+<main>
+  <div class="col">
+    <h2>Codi principal (main.py)</h2>
+    <textarea id="codeInput">import sys, math, random, statistics
+sys.path.insert(0, '/')
+
+# Bucle "pesat" expressament, per veure que NO bloqueja la interficie.
+# Mentre compta, el comptador de dalt a la dreta segueix avancant.
+total = 0
+for i in range(2_000_000):
+    total += math.sqrt(i) % 7
+print("Suma de control:", round(total, 2))
+print("Mitjana aleatoria:", statistics.mean(random.sample(range(100), 10)))
+
+# Prova d'importar un segon fitxer (helper.py, definit a la columna de la dreta)
+import helper
+print(helper.saluda("Jordi"))
+</textarea>
+    <div style="display:flex; gap:10px;">
+      <button id="runBtn" disabled>Executa</button>
+      <button id="interruptBtn" class="secondary" disabled>Interromp</button>
+    </div>
+
+    <div class="helper-block">
+      <h2>Segon fitxer importable (helper.py)</h2>
+      <textarea id="helperInput" class="small">def saluda(nom):
+    return f"Hola {nom}, aixo ve d'un fitxer .py importat des d'un altre quadre."
+</textarea>
+      <button id="writeHelperBtn" class="secondary" disabled>Desa helper.py al sistema de fitxers virtual</button>
+    </div>
+  </div>
+
+  <div class="col">
+    <h2>Consola</h2>
+    <div class="console" id="consoleOut"></div>
+  </div>
+</main>
+
+<footer>
+  Pyodide es carrega des de <code>vendor/pyodide/0.28.3/</code> (relatiu a aquesta pàgina) dins d'un <code>Worker</code> creat a partir d'un Blob.
+  El fitxer <code>helper.py</code> es desa al sistema de fitxers virtual (MEMFS) de Pyodide abans d'executar.
+</footer>
+
+<script id="worker-src" type="text/plain">
+let pyodideReadyPromise = null;
+
+async function setup(pyodideBase) {
+  // pyodideBase arriba ja com a URL absoluta calculada pel fil principal,
+  // perque un worker creat des d'un Blob no te una ubicacio real on resoldre camins relatius.
+  self.importScripts(pyodideBase + 'pyodide.js');
+  const pyodide = await loadPyodide({
+    indexURL: pyodideBase
+  });
+  pyodide.setStdout({ batched: (msg) => self.postMessage({ type: 'stdout', text: msg }) });
+  pyodide.setStderr({ batched: (msg) => self.postMessage({ type: 'stderr', text: msg }) });
+  return pyodide;
+}
+
+self.onmessage = async (event) => {
+  const msg = event.data;
+
+  if (msg.type === 'init') {
+    pyodideReadyPromise = setup(msg.pyodideBase);
+    pyodideReadyPromise.then(() => self.postMessage({ type: 'ready' }));
+    return;
+  }
+
+  const pyodide = await pyodideReadyPromise;
+
+  if (msg.type === 'writeFile') {
+    try {
+      pyodide.FS.writeFile(msg.path, msg.content);
+      self.postMessage({ type: 'fileWritten', path: msg.path });
+    } catch (err) {
+      self.postMessage({ type: 'stderr', text: 'Error desant fitxer: ' + err });
+    }
+    return;
+  }
+
+  if (msg.type === 'run') {
+    self.postMessage({ type: 'busy' });
+    try {
+      // Esborrem mòduls cachejats per poder re-importar helper.py si ha canviat
+      pyodide.runPython("import sys\nfor m in ['helper']:\n    sys.modules.pop(m, None)");
+      await pyodide.runPythonAsync(msg.code);
+    } catch (err) {
+      self.postMessage({ type: 'stderr', text: String(err) });
+    }
+    self.postMessage({ type: 'done' });
+  }
+};
+</script>
+
+<script>
+(function () {
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const pulseCounter = document.getElementById('pulseCounter');
+  const consoleOut = document.getElementById('consoleOut');
+  const runBtn = document.getElementById('runBtn');
+  const interruptBtn = document.getElementById('interruptBtn');
+  const writeHelperBtn = document.getElementById('writeHelperBtn');
+  const codeInput = document.getElementById('codeInput');
+  const helperInput = document.getElementById('helperInput');
+
+  // Comptador que demostra que el fil principal segueix viu
+  let pulse = 0;
+  setInterval(() => {
+    pulse++;
+    pulseCounter.textContent = 'batec: ' + pulse;
+  }, 150);
+
+  function logLine(text, cls) {
+    const div = document.createElement('div');
+    div.className = cls;
+    div.textContent = text;
+    consoleOut.appendChild(div);
+    consoleOut.scrollTop = consoleOut.scrollHeight;
+  }
+
+  const workerSrc = document.getElementById('worker-src').textContent;
+  const blob = new Blob([workerSrc], { type: 'text/javascript' });
+  const worker = new Worker(URL.createObjectURL(blob));
+
+  // URL absoluta resolta contra la pagina actual (funciona sigui quin sigui
+  // el domini o subdirectori on es serveixi aquest fitxer).
+  const pyodideBase = new URL('vendor/pyodide/0.28.3/', window.location.href).href;
+  worker.postMessage({ type: 'init', pyodideBase: pyodideBase });
+
+  worker.onmessage = (event) => {
+    const msg = event.data;
+    if (msg.type === 'ready') {
+      statusDot.classList.add('ready');
+      statusText.textContent = 'Pyodide llest (worker independent del fil principal)';
+      runBtn.disabled = false;
+      writeHelperBtn.disabled = false;
+    } else if (msg.type === 'busy') {
+      statusDot.classList.add('busy');
+      statusText.textContent = 'Executant codi al worker…';
+      runBtn.disabled = true;
+    } else if (msg.type === 'done') {
+      statusDot.classList.remove('busy');
+      statusText.textContent = 'Llest';
+      runBtn.disabled = false;
+    } else if (msg.type === 'stdout') {
+      logLine(msg.text, 'stdout');
+    } else if (msg.type === 'stderr') {
+      logLine(msg.text, 'stderr');
+    } else if (msg.type === 'fileWritten') {
+      logLine('[fitxer desat: ' + msg.path + ']', 'status');
+    }
+  };
+
+  writeHelperBtn.addEventListener('click', () => {
+    worker.postMessage({ type: 'writeFile', path: '/helper.py', content: helperInput.value });
+  });
+
+  runBtn.addEventListener('click', () => {
+    consoleOut.innerHTML = '';
+    logLine('--- executant ---', 'status');
+    worker.postMessage({ type: 'run', code: codeInput.value });
+  });
+
+  // Desa helper.py automaticament un cop el worker esta llest
+  worker.addEventListener('message', function onceReady(e) {
+    if (e.data.type === 'ready') {
+      worker.postMessage({ type: 'writeFile', path: '/helper.py', content: helperInput.value });
+      worker.removeEventListener('message', onceReady);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
