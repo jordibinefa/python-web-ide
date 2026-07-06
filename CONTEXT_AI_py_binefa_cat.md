@@ -5,9 +5,11 @@ or a student — write a Python script that must work **unmodified** in two
 very different execution environments:
 
 1. **py.binefa.cat** — a browser-based Python IDE built on **Pyodide**
-   running inside a Web Worker, with a custom `tkinter` shim and a custom
-   `paho.mqtt.client` shim. Code is injected via a URL hash
-   (`#run:...&clau=valor`) and executed with `pyodide.runPythonAsync()`.
+   running inside a Web Worker, with a custom `tkinter` shim, a custom
+   `paho.mqtt.client` shim, a `requests` shim (`get`/`post` only, see §9),
+   and a shim watching `open()` to create data-file tabs (see §10). Code is
+   injected via a URL hash (`#run:...&clau=valor`) and executed with
+   `pyodide.runPythonAsync()`.
 2. **A real terminal** — `python3 script.py` (or `python3 script.py
    key=value ...`) on a normal desktop/Raspberry Pi install, with **real**
    `tkinter` and **real** `paho-mqtt` (installed via pip).
@@ -238,6 +240,18 @@ Use `asset_path(...)` for anything you `open()` yourself; leave
 `PhotoImage(file=...)` calls with bare filenames (no need to route them
 through this helper).
 
+**Update**: `worker.js` now explicitly pins Pyodide's virtual filesystem
+cwd to `/` (`pyodide.FS.chdir('/')`, set once in `setup()`). This means a
+**relative** `open("data.txt", "w")` in the browser now unambiguously
+resolves to `/data.txt` — the same root where project files/assets/data
+files live — matching what the `PhotoImage` shim already assumed. This was
+added specifically so that plain `open()` calls (not just `PhotoImage`)
+behave predictably; before this fix, the browser's actual cwd for
+`runPythonAsync()` was never explicitly guaranteed, and a relative
+`open()` could in principle land somewhere other than where `worker.js`
+restores files between runs. See §10 for how this interacts with data-file
+tabs.
+
 ---
 
 ## 5. `tkinter`: `Tk.update()`, never `mainloop()`, when combined with async code
@@ -413,10 +427,86 @@ and only test it in one environment:
   same way `mainloop()` would).
 - **`msg.payload` is `bytes`** in both the shim and real paho — always
   `.decode("utf-8")` before treating it as text/JSON.
+- **`requests` shim only implements `get()`/`post()`**, no
+  `raise_for_status()`, no `requests.exceptions.*` hierarchy — see §9.
+- **Writing a new file at the filesystem root triggers a browser-only UI
+  side effect** (a new data-file tab) — invisible outside the browser, no
+  functional difference to the write itself — see §10.
 
 ---
 
-## 9. Minimal end-to-end template
+## 9. `requests`: no dual-launch needed, but the exception surface differs
+
+Unlike tkinter/MQTT, `requests.get()`/`requests.post()` needs **no**
+environment-detection dance. The same call works unmodified in both
+places:
+
+- In the browser, `import requests` resolves to `http_shim.py`
+  (registered directly into `sys.modules['requests']` by `worker.js`).
+- On a real desktop, Python imports whatever real `requests` is installed
+  (if any) — nothing about this project changes that.
+
+There is no sync/async conflict here (unlike §1-§2) because both the shim
+and the real library expose a blocking call. What genuinely differs, and
+is worth knowing before writing example/test code meant to run in both
+places:
+
+- **The browser shim only implements `get()`/`post()`.** Other verbs,
+  `Session`, file uploads, streaming, etc. raise `AttributeError` in the
+  browser but work fine on a real desktop with `requests` installed.
+- **No `Response.raise_for_status()` in the shim** (deliberately minimal
+  v0 scope) — always check `.status_code`/`.ok` manually if the code must
+  run in-browser.
+- **Exception classes are NOT the same hierarchy.** The shim raises the
+  builtin `ConnectionError` on network/CORS failures. Real `requests`
+  raises `requests.exceptions.ConnectionError` — a sibling, not a subclass,
+  of the builtin one (both ultimately derive from `OSError`, but from
+  different branches). `except requests.exceptions.ConnectionError` will
+  **not** catch the shim's error, and `except ConnectionError` will **not**
+  catch real requests' error. If a script needs one `except` clause that
+  works in both environments, catch `OSError` (both branches derive from
+  it).
+- **CORS only applies in the browser.** A request that fails in-browser
+  because the target server lacks `Access-Control-Allow-Origin` will
+  succeed fine from a terminal (terminals have no CORS concept) — so
+  testing a script from a terminal first is not proof it'll work from
+  py.binefa.cat.
+- **The browser shim's calls are synchronous and block the single worker
+  thread** — same nature as `input()`/`mainloop()` blocking. Combined with
+  a `Tk.update()` loop (§5), a slow HTTP call freezes the window until it
+  returns. On a real desktop this isn't automatically true unless the
+  script itself is single-threaded the same way.
+
+---
+
+## 10. File writes / `open()`: data-file tabs are a browser-only side effect
+
+Writing a **new** file at the filesystem root with `open(name, "w")`
+triggers, purely as a side effect **in the browser only**, the creation of
+a "data file" tab in the IDE (see `ajuda.md` §14 for the user-facing
+description; `fs_shim.py` / `CONTEXT_fs_shim.md` for the
+implementation). This needs **no special handling in student code** for
+portability, unlike the tkinter/MQTT case in §1-§2:
+
+- On a real desktop, this shim is never loaded at all (only `worker.js`
+  registers it inside Pyodide) — the same `open()` call is a completely
+  ordinary file write, with zero side effects.
+- In the browser, `fs_shim.py` wraps `open()` but always delegates the
+  actual read/write to the real underlying file object — the write itself
+  behaves identically to a normal `open()`, the shim only *also* notifies
+  the main thread with the file's content after `close()`/`flush()`.
+- **Subdirectories**: `open("sub/x.txt", "w")` writes the file
+  identically in both environments, but in the browser it will **not**
+  get a data-file tab (the shim only recognizes root-level files in this
+  v0) — no functional difference, only a missing tab.
+- This relies on the cwd fix described in §4 (`pyodide.FS.chdir('/')`):
+  without it, a relative `open()` inside the browser might not resolve to
+  the same root where `worker.js` restores previously-written data files
+  between "Executa" runs.
+
+---
+
+## 11. Minimal end-to-end template
 
 Putting it all together — a skeleton combining every pattern above:
 
@@ -523,15 +613,17 @@ else:
 
 ---
 
-## 10. Keeping this document current
+## 12. Keeping this document current
 
 If you (an AI assistant) discover a new browser/terminal discrepancy while
 helping with a py.binefa.cat script — a new shim limitation, a new
 threading gotcha, a new path/encoding difference — add it here, and
-consider whether `ajuda.md` §13 (the Catalan, user-facing version of this
-same guidance) also needs the update. Treat empirical findings (things
+consider whether `ajuda.md` §13-§15 (the Catalan, user-facing version of
+this same guidance, covering terminal portability, data files, and
+`requests`) also needs the update. Treat empirical findings (things
 actually observed failing/working across both environments) as more
 reliable than a priori reasoning about what "should" work — several of
 the gotchas above (e.g. the `image=`+`text=` bug, the exact
-`asyncio.run()` crash message) were only confirmed by deliberately testing
-minimal reproductions across both environments side by side.
+`asyncio.run()` crash message, the `requests.exceptions.ConnectionError`
+vs. builtin `ConnectionError` split) were only confirmed by deliberately
+testing minimal reproductions across both environments side by side.

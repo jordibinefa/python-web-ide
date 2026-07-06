@@ -2,7 +2,8 @@
 
 Aquest document explica com carregar projectes i passar valors des de la URL
 (`#run:` / `#open:`), i quines restriccions té l'entorn respecte a un Python
-normal — sobretot pel que fa a **MQTT** i **tkinter**.
+normal — sobretot pel que fa a **MQTT**, **tkinter**, **requests** (peticions
+HTTP) i els **fitxers de dades** creats amb `open(...)`.
 
 > Aquest fitxer és l'esborrany en Markdown. Es convertirà a `ajuda.html`
 > quan estigui validat.
@@ -376,12 +377,14 @@ Tria un dels dos patrons segons si necessites codi asíncron en paral·lel
 
 - **Cada "Executa" reinicia l'estat de fitxers `.py`**: s'esborren tots els
   `.py` anteriors del sistema de fitxers virtual i es tornen a escriure els
-  del projecte actual. Els assets (imatges) i les variables de la URL es
+  del projecte actual. Els assets (imatges), els **fitxers de dades** creats
+  amb `open(...)` (vegeu la secció 14) i les variables de la URL es
   mantenen entre execucions.
-- **No hi ha accés a Internet des del codi Python**, més enllà de MQTT via
-  `wss`. No es poden fer peticions HTTP arbitràries (`requests`, `urllib`,
-  etc. no tenen accés a la xarxa real del navegador tal com ho tindrien en
-  un ordinador normal).
+- **Accés a Internet limitat**: a més de MQTT via `wss`, hi ha un
+  subconjunt de `requests` (`get`/`post` — vegeu la secció 15) que fa
+  peticions HTTP reals des del navegador. Cap altra biblioteca de xarxa
+  (`urllib`, `socket`, ...) hi té accés: només `requests` (via el seu shim)
+  i `paho.mqtt.client` (via `wss`) poden sortir a Internet.
 - **`matplotlib.pyplot.show()`** està adaptat perquè, en lloc d'obrir una
   finestra, enviï la imatge com a PNG a la consola de l'IDE.
 - **`input()` funciona però és bloquejant**: el programa espera que
@@ -640,3 +643,81 @@ async def bucle_principal():
   funcionaran al shim. Cal preparar les imatges ja a la mida final abans de
   pujar-les (per exemple amb ImageMagick) en lloc de redimensionar-les en
   temps d'execució.
+
+---
+
+## 14. Fitxers de dades: `open(..., "w")` crea una pestanya nova
+
+Si el teu codi crea o escriu un fitxer amb `open(...)` (per exemple
+`open("resultats.txt", "w")`), apareix automàticament una **pestanya nova**
+a l'IDE mostrant-ne el contingut — a l'estil d'onlinegdb.com. No cal fer res
+especial al codi: és el comportament normal d'`open()`, només que a més et
+mostra el resultat.
+
+- **Es manté entre execucions**: a diferència dels `.py` (que es
+  reinicien cada "Executa"), el contingut d'un fitxer de dades persisteix.
+  Si el teu codi hi afegeix línies (`open(..., "a")`) cada cop que
+  s'executa, veuràs com creix.
+- **Actualització de la pestanya**: si no l'has tocada manualment, es
+  refresca sola quan el codi hi torna a escriure. Si l'has editada a mà i
+  encara no has tornat a prémer "Executa", l'IDE **no la sobreescriu en
+  silenci** — mostra un avís amb un botó "Refresca" (aplica el contingut
+  nou) i "Ignora" (descarta l'avís, de moment).
+- **Editable**: pots editar-la a mà; si tornes a prémer "Executa", el teu
+  codi veurà el canvi que hi has fet (igual que ja passa amb els `.py`).
+- **Fitxers binaris** (`open(..., "wb")`, o contingut que no es pot
+  interpretar com a text): la pestanya només mostra `"Fitxer binari, N
+  bytes"` — mai el contingut real ni en base64.
+- **Tancar la pestanya (×)** et demana què vols fer:
+  - **Elimina l'arxiu** — desapareix del tot; el teu codi el trobarà com si
+    mai hagués existit la propera vegada.
+  - **Només tanca la pestanya** — deixa d'aparèixer i d'exportar-se, però
+    el contingut es continua enviant al teu codi (el pots seguir llegint/
+    escrivint amb `open(...)` amb normalitat).
+  - **Cancel·la**.
+- **Exportació ZIP**: només s'hi inclouen els fitxers de dades amb la
+  pestanya visible (no tancada).
+- **Sense subdirectoris**: només fitxers directament a l'arrel del
+  projecte (`open("nom.txt", ...)`, no `open("carpeta/nom.txt", ...)`) —
+  en aquesta primera versió, un `open()` amb subdirectori funciona amb
+  normalitat (el fitxer s'escriu igual), però no genera cap pestanya.
+
+---
+
+## 15. Restriccions de `requests` al navegador
+
+L'IDE inclou un subconjunt de `requests` (`get`/`post`) que fa peticions
+HTTP **reals** des del navegador, sense necessitat de cap servidor
+intermedi:
+
+```python
+import requests
+
+resp = requests.get("https://nodered.exemple.cat/canal_nou")
+print(resp.text)          # el text de la resposta
+print(resp.status_code)   # per exemple, 200
+print(resp.json())        # si la resposta és JSON
+```
+
+- **Verbs disponibles**: només `get(url, params=, headers=)` i
+  `post(url, data=, json=, params=, headers=)`. No hi ha `put`/`delete`/
+  `patch`/`head`, ni `requests.Session`.
+- **`Response` disponible**: `.status_code`, `.ok`, `.text`, `.headers`,
+  `.json()`. **No hi ha** `.raise_for_status()` ni la jerarquia
+  d'excepcions pròpia de `requests` (`requests.exceptions.*`) — un error
+  de connexió (servidor caigut, CORS bloquejat...) llença un
+  `ConnectionError` normal de Python, no un
+  `requests.exceptions.ConnectionError`.
+- **El servidor remot ha de permetre CORS**: encara que la petició es faci
+  bé des del codi, si el servidor no respon amb la capçalera
+  `Access-Control-Allow-Origin` adequada, el navegador bloqueja la
+  resposta i obtens un `ConnectionError`. Això no té a veure amb el teu
+  codi — cal que qui administra el servidor remot ho habiliti.
+- **Només text/JSON**: la resposta s'ha de poder interpretar com a text.
+  No hi ha suport per a contingut binari (imatges, fitxers) en aquesta
+  primera versió.
+- **És una crida bloquejant**: mentre s'espera la resposta, el teu
+  programa s'atura sencer (com `input()`). Si combines `requests` amb una
+  finestra tkinter (`finestra.update()` en bucle), la finestra es
+  congelarà uns instants mentre arriba la resposta — normal, no és cap
+  error.

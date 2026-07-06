@@ -6,56 +6,82 @@ comences un xat nou amb Claude per continuar, enganxa aquest fitxer +
 l'`index.html` actual com a primer missatge.
 
 > Aquest document tracta la **implementació del shim en si** (com es
-> construeix l'IDE). Si el que necessites és context per **escriure codi
-> Python d'exemple** que funcioni tant a py.binefa.cat com en un terminal
-> normal (tkinter/paho-mqtt reals), fes servir `CONTEXT_AI_py_binefa_cat.md`
-> en lloc d'aquest — cobreix el patró de portabilitat (`asyncio.run()` vs.
-> `await` de nivell superior, cua thread-safe per a MQTT real, rutes de
-> fitxers, etc.) après desenvolupant `tk_mqtt_smm.py`.
+> construeix l'IDE) per a **tkinter, MQTT/paho, i l'arquitectura general**.
+> Per a `fs_shim.py` (fitxers de dades) i `http_shim.py` (`requests`), fes
+> servir els seus documents dedicats: `CONTEXT_fs_shim.md` i
+> `CONTEXT_http_shim.md`. Si el que necessites és context per **escriure
+> codi Python d'exemple** que funcioni tant a py.binefa.cat com en un
+> terminal normal (tkinter/paho-mqtt reals), fes servir
+> `CONTEXT_AI_py_binefa_cat.md` en lloc d'aquest — cobreix el patró de
+> portabilitat (`asyncio.run()` vs. `await` de nivell superior, cua
+> thread-safe per a MQTT real, rutes de fitxers, etc.) après desenvolupant
+> `tk_mqtt_smm.py`.
 
 ## Desplegament (canvi respecte a versions anteriors)
 
 El projecte ara viu al VPS (`vps-f95c103f-vps-ovh-net`), servit amb
-**`docker-compose.yml` + `nginx.conf`** dins `~/py-web/`, NO amb el
-`server.py` local de desenvolupament. Estructura:
+**`docker-compose.vps.yml` (o `docker-compose.local.yml` per a ús local) +
+`nginx.conf`** dins `~/py-web/`, NO amb el `server.py` local de
+desenvolupament. Estructura actual:
 
 ```
 py-web/
-├── docker-compose.yml
+├── docker-compose.local.yml   (ús local/VM/WSL, sense Traefik)
+├── docker-compose.vps.yml     (VPS, Traefik + HTTPS)
 ├── nginx.conf
 ├── vendor-package.py
+├── ajuda.md, README.md, LLEGEIX-ME.md
+├── CONTEXT_AI_py_binefa_cat.md      (portabilitat navegador↔terminal)
+├── CONTEXT_tkinter_shim.md          (aquest document: general + tkinter/MQTT)
+├── CONTEXT_fs_shim.md               (dedicat a fs_shim.py)
+├── CONTEXT_http_shim.md             (dedicat a http_shim.py)
 └── www/
-    ├── index.html              (el fitxer principal, tot incrustat)
-    ├── tkinter_shim.py         (còpia de referència, no s'usa en runtime)
-    ├── exemples/               (ZIPs i assets per provar/demostrar)
-    │   ├── py/                 (scripts MQTT "reals" per a Pi/fora del navegador)
-    │   │   ├── mqtt_pub_sub.py
-    │   │   ├── mqtt_publica.py
-    │   │   ├── mqtt_subscriu.py
-    │   │   └── paho_shim.py
-    │   ├── tk*.zip, tkGrid00.zip, tkImg.zip, tkListBox.zip, ...
-    │   ├── matplot00.zip, exImport00.zip
-    │   └── logoEcat.png
+    ├── index.html              (el fitxer principal: pestanyes, editor,
+    │                            orquestració del worker — JA NO incrusta
+    │                            els shims inline, vegeu més avall)
+    ├── ajuda.html
+    ├── assets/
+    │   ├── tkinter_shim.py
+    │   ├── paho_mqtt_shim.py
+    │   ├── fs_shim.py          (pestanyes de fitxers de dades)
+    │   ├── http_shim.py        (requests.get/post)
+    │   └── worker.js
+    ├── exemples/               (ZIPs + index.txt, agrupats per categoria)
     └── vendor/
         ├── codemirror/6.0.2/
         ├── jszip/3.10.1/
         ├── mqtt/5.15.1/mqtt.min.js        (MQTT.js, llibreria real)
         ├── paho/1.0/paho-mqtt.js          (wrapper JS PROPI, no el Paho oficial)
-        └── pyodide/0.28.3/
+        └── pyodide/0.28.3/                (NO es versiona a Git)
 ```
 
-⚠️ **Pendent de verificar / possible inconsistència**: alguns comentaris dins
-`index.html` (prop de `SharedArrayBuffer` i dels missatges d'avís de
-tkinter/input) encara diuen *"serveix amb `python3 server.py`"*. Ara que es
-serveix amb nginx, cal confirmar que `nginx.conf` envia les capçaleres
-**COOP/COEP** (`Cross-Origin-Opener-Policy: same-origin` i
-`Cross-Origin-Embedder-Policy: require-corp`), imprescindibles perquè
-`SharedArrayBuffer` funcioni — i actualitzar els textos d'avís si cal.
+**Canvi respecte a versions més antigues d'aquest document**: els shims
+(`tkinter_shim.py`, `paho_mqtt_shim.py`, `fs_shim.py`, `http_shim.py`) ja
+**NO** estan incrustats dins `index.html` com a
+`<script type="text/plain">` — es van extreure a `www/assets/*.py` en un
+refactor per reduir la mida d'`index.html`. `index.html` els carrega amb
+`fetch()` en paral·lel (`Promise.all(...)`) abans de crear el worker, i
+n'envia el text (`tkinterShimSource`, `pahoShimSource`, `fsShimSource`,
+`httpShimSource`) dins el missatge `'init'`. `worker.js` és qui realment
+els `exec()` dins Pyodide (vegeu "Arquitectura general" més avall).
+
+⚠️ **Pendent de verificar / possible inconsistència** *(RESOLT — confirmat
+llegint `nginx.conf` directament durant la sessió de `requests`/CORS amb
+Node-RED)*: alguns comentaris dins `index.html` (prop de `SharedArrayBuffer`
+i dels missatges d'avís de tkinter/input) encara diuen *"serveix amb
+`python3 server.py`"*. Ara que es serveix amb nginx, cal confirmar que
+`nginx.conf` envia les capçaleres **COOP/COEP** (`Cross-Origin-Opener-Policy:
+same-origin` i `Cross-Origin-Embedder-Policy: require-corp`),
+imprescindibles perquè `SharedArrayBuffer` funcioni — i actualitzar els
+textos d'avís si cal. **Confirmat: `nginx.conf` ja les envia correctament**
+(`add_header` amb `always`, més `Cross-Origin-Resource-Policy: cross-origin`
+i un bloc `location /vendor/` amb cache llarga). Encara pendent: repassar
+els comentaris dins `index.html` que esmenten `server.py` textualment.
 
 ## `#run:`/`#open:` a la URL — ja implementat
 
-Vegeu `ajuda.md` (a `www/ajuda.md`, encara pendent de convertir a
-`ajuda.html`) per a l'especificació completa amb exemples. Resum tècnic:
+Vegeu `ajuda.md` (ja convertit a `www/ajuda.html`) per a l'especificació
+completa amb exemples. Resum tècnic:
 
 - Sintaxi: `#run:<url.zip>` (cas simple) o `#run:_prj=zip:<url>&clau=valor&...`
   / `#run:_prj=ex:<id>&...` (amb variables). `#open:` fa el mateix pero sense
@@ -78,17 +104,35 @@ Vegeu `ajuda.md` (a `www/ajuda.md`, encara pendent de convertir a
   `dominiPermes()`, `carregaProjecteRemot()`, `carregaExempleDesDeHash()`,
   `aplicaDirectivaHash()`, `intentaAutoRun()`.
 
-## Arquitectura general (sense canvis respecte abans)
+## Arquitectura general (actualitzada: shims com a fitxers separats)
 
 - Pyodide corre dins un **Web Worker**; tot el que toca pantalla (finestra
   Tk) passa per `postMessage` cap al fil principal (el *renderer*).
-- El shim de tkinter està **incrustat** a `index.html` com
-  `<script id="tkinter-shim-src" type="text/plain">`. El fitxer
-  `tkinter_shim.py` separat és només còpia de referència.
+- Els shims **ja NO estan incrustats** a `index.html` (canvi respecte a
+  versions anteriors d'aquest document): viuen com a fitxers separats a
+  `www/assets/*.py` (`tkinter_shim.py`, `paho_mqtt_shim.py`, `fs_shim.py`,
+  `http_shim.py`). `index.html` els carrega amb `fetch()` (en paral·lel,
+  `Promise.all(...)`) abans de crear el worker, i n'envia el text dins el
+  missatge `'init'` (`tkinterShimSource`, `pahoShimSource`, `fsShimSource`,
+  `httpShimSource`). `worker.js` és qui els `exec()` de veritat dins
+  Pyodide, dins `setup()`.
 - **Pyodide intercepta `import X` amb un finder propi** per a certs mòduls
   (tkinter n'és el cas conegut): la solució sempre és registrar el mòdul
   directament a `sys.modules[...]` dins un `types.ModuleType`, MAI escriure'l
-  al FS ni tocar `sys.path` per a aquests casos especials.
+  al FS ni tocar `sys.path` per a aquests casos especials. **`requests`
+  segueix el mateix patró** (`sys.modules['requests']`, vegeu la secció
+  "requests / http_shim.py" més avall).
+- **`fs_shim.py` NO segueix aquest patró**: no registra cap mòdul nou —
+  només fa `builtins.open = _open_vigilat` (monkeypatch directe). No cal
+  `sys.modules` perquè `open()` ja és global; qualsevol `import` de mòduls
+  que facin servir `open()` per sota (com el propi Python) ja veu la
+  versió vigilada automàticament.
+- **`http_shim.py` NO necessita cap pont cap al fil principal** (a
+  diferència de `__tk_call__`/`__file_changed__`): un Web Worker ja té el
+  seu propi `XMLHttpRequest`, accessible des de Pyodide amb
+  `from js import XMLHttpRequest`. Fent la crida amb `xhr.open(mètode,
+  url, False)` (síncrona), el navegador ja bloqueja només el worker fins
+  que arriba la resposta — no calen `SharedArrayBuffer` ni `Atomics`.
 
 ## MQTT / Paho — ja implementat (Model B)
 
@@ -132,6 +176,13 @@ fer un altre pont `postMessage`/`Atomics` només per a MQTT.
   Raspberry Pi o fora del navegador) dels exemples del navegador —
   documentar-los com a parella pedagògica ("aquest és el que faries a un Pi
   real amb el paho de veritat").
+
+## Fitxers de dades (`fs_shim.py`) i `requests` (`http_shim.py`)
+
+Documentats cadascun en un fitxer propi: **`CONTEXT_fs_shim.md`** i
+**`CONTEXT_http_shim.md`** (disseny, paranys i limitacions específiques de
+cada shim). Aquest document es queda amb l'arquitectura general i els
+shims de tkinter/MQTT.
 
 ## tkinter + async (MQTT, temporitzadors...) — Tk.update(), NO mainloop()
 
@@ -337,6 +388,29 @@ causa real).
 10. Text d'estat ("Carregant paquets…") encallat en programes amb bucle
     infinit → cal reenviar `{type:'status', text:'Executant…'}` abans de
     `runPythonAsync(msg.code)`. Vegeu la secció "tkinter + async".
+11. **cwd de Pyodide no garantit a `/` per a `open()` relatius** → un
+    `open("nom.txt", "w")` relatiu de l'alumne podria no coincidir amb on
+    `worker.js` restaura `assets`/`dataFiles` (sempre a `/nom`) entre
+    execucions. Fix: `pyodide.FS.chdir('/')` explícit a `setup()`,
+    incondicional. Descobert mentre es dissenyava `fs_shim.py`: abans
+    d'aquest fix, `fs_shim.py` reobria el fitxer amb un path forçat a
+    `/nom` per notificar-ne el contingut — però si el `write()` original
+    havia anat a un cwd diferent de `/`, el re-`open()` de `fs_shim`
+    llegia un fitxer diferent (o inexistent). Solució final: `fs_shim.py`
+    reobre amb el path EXACTE que l'alumne ha passat a `open()` (mai un
+    path "corregit"), i el `chdir('/')` garanteix que aquest path
+    coincideixi amb l'arrel on viuen `assets`/`dataFiles`.
+12. **`loadPackagesFromImports()` no sap res de `sys.modules`** → intentava
+    baixar-se el paquet real `requests` (+ `certifi`/`charset-normalizer`/
+    `idna`/`urllib3`) cada cop que el codi feia `import requests`, encara
+    que `http_shim.py` ja el tingués registrat — provocava errors de xarxa
+    confusos a la consola (i, en aquest cas concret, un error real
+    d'integritat SHA-256 al CDN/proxy, tot i que el codi acabava
+    funcionant igualment gràcies al shim). Fix: abans de cridar
+    `loadPackagesFromImports()`, s'excloen amb una regexp les línies
+    `import requests`/`from requests import ...` **NOMÉS** de la còpia de
+    codi que s'escaneja per a l'auto-càrrega de paquets — el codi que
+    s'executa de veritat (`runPythonAsync(msg.code)`) no es toca.
 
 ## Widgets/funcions tkinter implementats (fases 1-8, totes fetes)
 
@@ -352,6 +426,14 @@ mínimes, `Listbox`, `Checkbutton`, `PhotoImage`. Gestors: `pack()`, `grid()`
   `bind()` genèric (només `command=`), `PhotoImage.width()/height()` → `0`.
 - MQTT: només `wss` (cap TCP cru), subconjunt de l'API paho (sense
   `tls_set()`, `will_set()`, reconnexió automàtica configurable, etc.).
+- Fitxers de dades (`fs_shim.py`): sense subdirectoris (només arrel),
+  fitxers binaris mostrats només com a `"Fitxer binari, N bytes"` (mai el
+  contingut), "Elimina l'arxiu" en tancar la pestanya no és reversible.
+- `requests` (`http_shim.py`): només `get`/`post` (sense `put`/`delete`/
+  `patch`/`head`/`Session` en aquesta v0), sense `.raise_for_status()`,
+  sense jerarquia `requests.exceptions.*` (errors de xarxa/CORS surten com
+  a `ConnectionError` normal de Python), sense contingut binari a la
+  resposta (només text/JSON).
 
 ## Tasques pendents (actualitzat)
 
@@ -401,3 +483,19 @@ mínimes, `Listbox`, `Checkbutton`, `PhotoImage`. Gestors: `pack()`, `grid()`
     d'entorn al `main.py` quan el programa es tanca per un altre mitjà que
     no sigui "Interromp" (p. ex. la X d'una finestra tkinter, com
     `tk_mqtt_smm`); si depèn d'"Interromp", fitxer de terminal a part.
+16. ~~Fitxers de dades creats amb `open()` → pestanya nova a l'IDE
+    (`fs_shim.py`)~~ — **fet**, vegeu `CONTEXT_fs_shim.md` per al disseny
+    complet. Inclou 3
+    opcions en tancar pestanya, estat "brut"/`pendent`, exportació ZIP
+    condicionada a `tabOberta`, i el fix de `chdir('/')` (parany #11).
+17. ~~`requests.get`/`post` des del navegador (`http_shim.py`)~~ — **fet**,
+    vegeu la secció dedicada més amunt. Sense pont cap al fil principal
+    (XHR síncron dins el worker); exclòs de `loadPackagesFromImports()`
+    (parany #12).
+18. Pendent: ampliar `http_shim.py` amb més verbs (`put`/`delete`/`patch`)
+    i una jerarquia d'excepcions pròpia (`requests.exceptions.*`), si mai
+    cal — deliberadament fora d'abast en la v0 (decisió de Jordi:
+    "mínim: get/post amb json/params/headers").
+19. Pendent: donar suport a contingut binari a les respostes de
+    `http_shim.py` (imatges, fitxers descarregats) — fora d'abast en la
+    v0 (decisió de Jordi: "només text/JSON").
