@@ -1,0 +1,3 @@
+# Paquets de tercers (wheels de Pyodide + numpy/pandas/matplotlib/etc.),
+# es regeneren executant vendor-package.py -- vegeu README.md
+www/vendor/pyodide/

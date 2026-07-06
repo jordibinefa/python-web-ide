@@ -1,0 +1,16 @@
+Bàsic;basic_condicionals;Condicionals (if / elif / else)
+Bàsic;basic_bucles;Bucles (while / for)
+Bàsic;basic_tryexcept;Gestió d'excepcions (try / except / finally)
+Bàsic;basic_multifitxer;Mòduls: importar un fitxer des d'un altre
+Científic;cientific_numpy;Numpy: arrays i operacions bàsiques
+Científic;cientific_matplotlib;Matplotlib + Numpy: sinus i cosinus
+TKinter;tk_basic;Tkinter: Entry, Button, messagebox
+TKinter;tk_checkbutton;Tkinter: Checkbutton
+TKinter;tk_grid;Tkinter: grid() (graella 2x2)
+TKinter;tk_listbox;Tkinter: Listbox
+TKinter;tk_place;Tkinter: place()
+TKinter;tk_radiobutton;Tkinter: Radiobutton + StringVar
+TKinter;tk_image;Tkinter: PhotoImage (imatge)
+MQTT;mqtt_publica;MQTT: Publicador (async)
+MQTT;mqtt_subscriu;MQTT: Subscriptor (async)
+MQTT;mqtt_pub_sub;MQTT: Publicar i subscriure alhora (async)

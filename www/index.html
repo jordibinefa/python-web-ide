@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDE Python</title>
+<style>
+  :root {
+    --bg:     #f4f5f7;
+    --panel:  #ffffff;
+    --line:   #dde1e7;
+    --text:   #1c2028;
+    --muted:  #6b7585;
+    --accent: #1a7f52;
+    --warn:   #b45a06;
+    --err:    #c0342e;
+  }
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* ── Capçalera ── */
+  header {
+    flex-shrink: 0;
+    padding: 12px 20px 8px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .header-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  header h1 { margin: 0; font-size: 1.05rem; font-weight: 600; }
+  .projecte-wrap {
+    font-size: .82rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .nom-projecte {
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 1px;
+    transition: color .15s, border-color .15s;
+  }
+  .nom-projecte:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .ajuda-link {
+    font-size: .78rem;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    transition: color .15s, border-color .15s;
+  }
+  .ajuda-link:hover { color: var(--accent); border-color: var(--accent); }
+  .nom-projecte-input {
+    font-size: .82rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 1px 6px;
+    outline: none;
+    color: var(--text);
+    background: white;
+    min-width: 80px;
+  }
+  header p { margin: 3px 0 0; color: var(--muted); font-size: .8rem; }
+
+  /* ── Barra d'estat ── */
+  .status-row {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 20px;
+    font-size: .8rem;
+    color: var(--muted);
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--warn);
+    flex-shrink: 0;
+    transition: background .2s;
+  }
+  .dot.ready { background: var(--accent); animation: none; }
+  .dot.busy  { background: var(--warn);   animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .saved-indicator { font-size: .75rem; color: var(--accent); opacity: 0; transition: opacity .4s; }
+  .saved-indicator.visible { opacity: 1; }
+  .pulse-counter {
+    margin-left: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .78rem;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 2px 8px;
+  }
+
+  /* ── Disposició principal ── */
+  main {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px;
+    overflow: hidden;
+  }
+  main.has-tk { grid-template-columns: 1fr 1fr 1fr; }
+  /* Maximitzar la finestra Tk (com el canvas de Snap!): amaga codi+consola
+     I la resta de la interfície (capçalera/barra d'estat/peu — vegeu les
+     regles sobre 'body.tk-maximitzat' més avall), perquè la finestra Tk
+     aprofiti tot l'espai disponible, no nomes les altres dues columnes. */
+  main.has-tk.tk-maximitzat .col:not(.tk-col) { display: none; }
+  main.tk-maximitzat { padding: 0; gap: 0; }
+  main.tk-maximitzat .tk-col {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    border-radius: 0;
+    border: none;
+  }
+  body.tk-maximitzat > header,
+  body.tk-maximitzat > .status-row,
+  body.tk-maximitzat > footer { display: none; }
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 4px 7px; line-height: 0;
+  }
+  .icon-btn svg { width: 15px; height: 15px; display: block; }
+
+  /* ── Barres per redimensionar columnes (arrossegar amb el ratolí) ── */
+  .resizer {
+    cursor: col-resize;
+    position: relative;
+    -webkit-user-select: none; user-select: none;
+  }
+  .resizer::after {
+    content: '';
+    position: absolute; top: 10px; bottom: 10px; left: 2px; width: 2px;
+    background: var(--line); border-radius: 2px; transition: background .15s;
+  }
+  .resizer:hover::after, .resizer.dragging::after { background: var(--accent); }
+  #resizer2 { display: none; }
+  main.has-tk #resizer2 { display: block; }
+  main.tk-maximitzat .resizer { display: none; }
+  .col {
+    min-height: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .col-body {
+    flex-shrink: 0;
+    padding: 10px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── Barra de pestanyes ── */
+  .tab-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: stretch;
+    border-bottom: 2px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0 6px;
+    min-height: 36px;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: .8rem;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+  .tab-close {
+    background: none; border: none; padding: 1px 3px; margin: 0;
+    cursor: pointer; color: var(--muted); font-size: .85rem; line-height: 1;
+    border-radius: 3px; opacity: 0; transition: opacity .15s;
+  }
+  .tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
+  .tab-close:hover { background: var(--line); color: var(--err); }
+  .tab-new {
+    display: flex; align-items: center; padding: 4px 8px;
+    background: none; border: none; cursor: pointer; color: var(--muted);
+    font-size: 1.1rem; border-radius: 4px; margin: 4px 2px; line-height: 1;
+  }
+  .tab-new:hover { background: var(--bg); color: var(--text); }
+  .tab-rename-input {
+    width: 90px; font-size: .8rem;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    border: 1px solid var(--accent); border-radius: 3px;
+    padding: 1px 4px; background: white; color: var(--text); outline: none;
+  }
+  /* Pestanya d'un fitxer de dades (creat per open() del codi de l'alumne):
+     vora superior de color diferent perque es distingeixi d'un cop d'ull
+     de les pestanyes .py normals. */
+  .tab-data { border-top: 2px solid var(--warn, #c9860a); }
+  .tab-data .tab-name::before { content: '📄 '; }
+
+  /* ── Editor de fitxers de dades (textarea, sense CodeMirror) ── */
+  #dataFileEditor {
+    flex: 1; min-height: 0; display: flex; flex-direction: column;
+  }
+  #dataFileTextarea {
+    flex: 1; min-height: 0; resize: none; border: none;
+    border-bottom: 1px solid var(--line);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .88rem; padding: 8px; outline: none;
+    background: var(--paper, #fff); color: var(--text);
+  }
+  .fs-banner {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; font-size: .8rem;
+    background: #fff6e0; color: #7a5400; border-bottom: 1px solid #e8d18a;
+  }
+  .fs-banner button.sm { padding: 3px 10px; font-size: .75rem; }
+
+  /* ── Modal de confirmació de tancament d'un fitxer de dades ── */
+  .fs-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+  }
+  .fs-modal {
+    background: var(--paper, #fff); border-radius: 10px; padding: 20px 22px;
+    max-width: 380px; box-shadow: 0 8px 30px rgba(0,0,0,.25);
+  }
+  .fs-modal p { margin: 0 0 14px; font-size: .9rem; }
+  .fs-modal-botons { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ── Editor CodeMirror ── */
+  #codeEditor {
+    flex: 1; min-height: 0; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  #codeEditor .cm-editor {
+    flex: 1; min-height: 0;
+    border-top: none; border-left: none; border-right: none;
+    border-bottom: 1px solid var(--line); border-radius: 0; font-size: .88rem;
+  }
+  #codeEditor .cm-editor.cm-focused { outline: none; border-bottom-color: var(--accent); }
+  #codeEditor .cm-scroller {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    overflow: auto;
+  }
+
+  /* ── Botons ── */
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 7px; padding: 8px 16px; font-weight: 600;
+    font-size: .85rem; cursor: pointer;
+  }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--line); font-weight: 500;
+  }
+  button.secondary:hover:not(:disabled) { background: var(--bg); }
+  button.danger {
+    background: transparent; color: var(--err);
+    border: 1px solid var(--err); font-weight: 600;
+  }
+  button.danger:hover:not(:disabled) { background: #fdf2f2; }
+  button.sm { padding: 4px 10px; font-size: .76rem; }
+  button.esborra {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--line); font-weight: 500;
+  }
+  button.esborra:hover:not(:disabled) {
+    color: var(--err); border-color: var(--err); background: #fdf2f2;
+  }
+  kbd {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .72em; font-weight: 400; opacity: .7;
+  }
+  .exemples-select {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--line); border-radius: 7px;
+    padding: 5px 8px; font-size: .76rem; font-weight: 500;
+    font-family: inherit; cursor: pointer; flex: 1; min-width: 0;
+  }
+  .exemples-select:hover { background: var(--bg); }
+
+  /* ── Capçalera de la consola ── */
+  .console-header {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px 6px; border-bottom: 1px solid var(--line);
+  }
+  .console-header h2 {
+    margin: 0; font-size: .7rem;
+    text-transform: uppercase; letter-spacing: .5px; color: var(--muted);
+  }
+  .console-header .btn-row { gap: 5px; }
+
+  /* ── Consola ── */
+  .console {
+    flex: 1; min-height: 0; background: #fafafa;
+    padding: 10px 12px; overflow: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .82rem; white-space: pre-wrap;
+  }
+  .console .stdout { color: var(--text); }
+  .console .stderr { color: var(--err); }
+  .console .status { color: var(--muted); font-style: italic; }
+
+  /* ── Input interactiu dins la consola (input() de Python) ── */
+  .stdin-line { display: flex; align-items: baseline; }
+  .stdin-prompt { white-space: pre; color: var(--text); }
+  .stdin-input {
+    border: none; outline: none; background: transparent;
+    color: var(--accent);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: inherit; min-width: 4ch; flex: 1;
+    padding: 0; caret-color: var(--accent);
+  }
+  .stdin-input:disabled { color: var(--text); }
+
+  /* ── Finestra Tk (renderer del shim de tkinter) ── */
+  .tk-col { display: none; }
+  main.has-tk .tk-col { display: flex; }
+  .tk-window-header {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px 6px; border-bottom: 1px solid var(--line);
+  }
+  .tk-window-header h2 {
+    margin: 0; font-size: .7rem;
+    text-transform: uppercase; letter-spacing: .5px; color: var(--muted);
+  }
+  .tk-window {
+    flex: 1; min-height: 0; position: relative; overflow: auto;
+    background: #f0f0f0; padding: 8px;
+    font-family: ui-sans-serif, system-ui, sans-serif; font-size: .85rem;
+    display: flex; flex-direction: column;
+    /* "safe center": centra quan hi cap, pero si el contingut sobreïx
+       aquest contenidor (que es el que fa l'overflow:auto real), cau a
+       flex-start en lloc de deixar la part que sobrepassa fora d'abast
+       del scroll. Amb "center" a seques, un widget mes ample que el
+       contenidor queda RETALLAT SIMETRICAMENT als dos costats i no hi ha
+       manera d'arribar-hi fent scroll (bug conegut de CSS: overflow +
+       centrat sobre el mateix element amb overflow:auto). */
+    align-items: safe center;
+  }
+  .tk-label { display: block; margin: 2px 0; color: #1c2028; }
+  .tk-entry {
+    display: block; margin: 2px 0; padding: 2px 4px;
+    border: 1px solid #888; font: inherit; font-size: .85rem;
+  }
+  .tk-button {
+    display: block; margin: 2px 0; padding: 3px 10px;
+    border: 1px solid #888; background: #e8e8e8; color: #1c2028;
+    cursor: pointer; font: inherit; font-weight: normal; border-radius: 0;
+  }
+  .tk-button:hover { background: #ddd; }
+  .tk-radio {
+    display: flex; align-items: center; gap: 6px;
+    margin: 2px 0; cursor: pointer; color: #1c2028;
+  }
+  .tk-radio input { margin: 0; cursor: pointer; }
+  .tk-listbox {
+    margin: 2px 0; min-width: 140px;
+    font: inherit; font-size: .85rem;
+    border: 1px solid #888;
+  }
+  .tk-check {
+    display: flex; align-items: center; gap: 6px;
+    margin: 2px 0; cursor: pointer; color: #1c2028;
+  }
+  .tk-check input { margin: 0; cursor: pointer; }
+
+  /* ── Chips d'imatges importades al projecte ── */
+  .assets-bar {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 0 0 4px;
+  }
+  .asset-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 4px; padding: 2px 4px 2px 8px;
+    font-size: .72rem; color: var(--muted);
+  }
+  .asset-chip button {
+    border: none; background: transparent; color: var(--muted);
+    cursor: pointer; font-size: .85rem; line-height: 1; padding: 2px 4px;
+  }
+  .asset-chip button:hover { color: var(--err); }
+  .tk-frame { display: flex; flex-direction: column; align-items: safe center; width: 100%; }
+
+  /* ── Peu de pàgina ── */
+  footer {
+    flex-shrink: 0; padding: 6px 20px;
+    color: var(--muted); font-size: .72rem;
+    border-top: 1px solid var(--line); background: var(--panel);
+  }
+  footer code { color: var(--accent); font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ── Mòbil ── */
+  @media (max-width: 760px) {
+    html, body { height: auto; overflow: auto; }
+    main, main.has-tk { grid-template-columns: 1fr !important; overflow: visible; height: auto; }
+    .resizer { display: none !important; }
+    .col { min-height: 300px; }
+    #codeEditor .cm-scroller { min-height: 200px; max-height: 40vh; }
+    .console { max-height: 40vh; min-height: 150px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>IDE Python</h1>
+    <span class="projecte-wrap">
+      Projecte:&nbsp;<span id="nomProjecte" class="nom-projecte" title="Clic per editar el nom">projecte</span>
+    </span>
+    <a href="ajuda.html" class="ajuda-link" title="Com passar projectes i variables per la URL (#run:/#open:)">Ajuda</a>
+  </div>
+  <p>Execució en Web Worker — el navegador no es bloqueja mentre corre el codi.</p>
+</header>
+
+<div class="status-row">
+  <span class="dot" id="statusDot"></span>
+  <span id="statusText">Carregant Python…</span>
+  <span class="saved-indicator" id="savedIndicator">✓ Desat</span>
+  <span class="pulse-counter" id="pulseCounter">batec: 0</span>
+</div>
+
+<main id="mainGrid">
+  <div class="col" id="codiCol">
+    <div class="tab-bar" id="tabBar"></div>
+    <div id="codeEditor"></div>
+    <div id="dataFileEditor" style="display:none">
+      <div class="fs-banner" id="fsBanner" style="display:none">
+        <span id="fsBannerText">El codi ha escrit un contingut nou aquí.</span>
+        <button type="button" id="fsBannerRefresca" class="sm">Refresca</button>
+        <button type="button" id="fsBannerIgnora" class="sm secondary">Ignora</button>
+      </div>
+      <textarea id="dataFileTextarea" spellcheck="false"></textarea>
+    </div>
+    <div class="col-body">
+      <div class="btn-row">
+        <button id="runBtn" disabled title="Ctrl+Enter / Cmd+Enter">
+          Executa <kbd>Ctrl+↵</kbd>
+        </button>
+        <button id="interruptBtn" class="danger" disabled>Interromp</button>
+      </div>
+      <div class="btn-row">
+        <select id="exemplesSelect" class="exemples-select" title="Carrega un exemple predefinit (substitueix el projecte actual)">
+          <option value="">— Carrega un exemple… —</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button id="exportBtn" class="secondary sm">Exporta ZIP</button>
+        <button id="importBtn" class="secondary sm">Importa ZIP…</button>
+        <input type="file" id="importInput" accept=".zip" style="display:none">
+        <button id="importImageBtn" class="secondary sm">Importa imatge…</button>
+        <input type="file" id="importImageInput" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" multiple style="display:none">
+        <button id="esborraBtn" class="esborra sm">Esborra localStorage</button>
+      </div>
+      <div class="assets-bar" id="assetsBar"></div>
+    </div>
+  </div>
+
+  <div class="resizer" id="resizer1" title="Arrossega per redimensionar"></div>
+
+  <div class="col" id="consolaCol">
+    <div class="console-header">
+      <h2>Consola</h2>
+      <div class="btn-row">
+        <button id="copyBtn" class="secondary sm" disabled>Copia</button>
+        <button id="clearBtn" class="secondary sm">Neteja</button>
+      </div>
+    </div>
+    <div class="console" id="consoleOut"></div>
+  </div>
+
+  <div class="resizer" id="resizer2" title="Arrossega per redimensionar"></div>
+
+  <div class="col tk-col" id="tkCol">
+    <div class="tk-window-header">
+      <h2>Finestra Tk</h2>
+      <div class="btn-row">
+        <button id="tkMaximitzaBtn" class="secondary sm icon-btn" title="Maximitza la finestra Tk" aria-label="Maximitza la finestra Tk"></button>
+        <button id="tkCloseBtn" class="secondary sm">Tanca</button>
+      </div>
+    </div>
+    <div class="tk-window" id="tkWindow"></div>
+  </div>
+</main>
+
+<footer>
+  Pyodide <code>vendor/pyodide/0.28.3/</code> ·
+  CodeMirror <code>vendor/codemirror/6.0.2/</code> ·
+  JSZip <code>vendor/jszip/3.10.1/</code> ·
+  tot vendoritzat, sense CDN extern.
+</footer>
+
+<!-- Codi font del shim de tkinter, del shim de paho-mqtt i del worker: es
+     carreguen com a fitxers externs (assets/) via fetch(), no encastats. -->
+
+<script type="module">
+import { EditorView, basicSetup, python } from '/vendor/codemirror/6.0.2/codemirror-bundle.js';
+import JSZip from '/vendor/jszip/3.10.1/jszip.js';
+
+(async function () {
+  // ── Elements de la interfície ─────────────────────────────────────────
+  const statusDot      = document.getElementById('statusDot');
+  const statusText     = document.getElementById('statusText');
+  const savedIndicator = document.getElementById('savedIndicator');
+  const pulseCounter   = document.getElementById('pulseCounter');
+  const nomProjecteEl  = document.getElementById('nomProjecte');
+  const consoleOut     = document.getElementById('consoleOut');
+  const runBtn         = document.getElementById('runBtn');
+  const interruptBtn   = document.getElementById('interruptBtn');
+  const clearBtn       = document.getElementById('clearBtn');
+  const copyBtn        = document.getElementById('copyBtn');
+  const exportBtn      = document.getElementById('exportBtn');
+  const exemplesSelect = document.getElementById('exemplesSelect');
+  const importBtn      = document.getElementById('importBtn');
+  const importInput    = document.getElementById('importInput');
+  const importImageBtn   = document.getElementById('importImageBtn');
+  const importImageInput = document.getElementById('importImageInput');
+  const assetsBar         = document.getElementById('assetsBar');
+  const esborraBtn     = document.getElementById('esborraBtn');
+  const tabBar         = document.getElementById('tabBar');
+  const codeEditorEl      = document.getElementById('codeEditor');
+  const dataFileEditorEl  = document.getElementById('dataFileEditor');
+  const dataFileTextarea  = document.getElementById('dataFileTextarea');
+  const fsBanner          = document.getElementById('fsBanner');
+  const fsBannerText      = document.getElementById('fsBannerText');
+  const fsBannerRefresca  = document.getElementById('fsBannerRefresca');
+  const fsBannerIgnora    = document.getElementById('fsBannerIgnora');
+  const fsModalOverlay    = document.getElementById('fsModalOverlay');
+  const fsModalText       = document.getElementById('fsModalText');
+  const fsModalElimina    = document.getElementById('fsModalElimina');
+  const fsModalNomesTanca = document.getElementById('fsModalNomesTanca');
+  const fsModalCancela    = document.getElementById('fsModalCancela');
+  const mainGrid       = document.getElementById('mainGrid');
+  const codiCol        = document.getElementById('codiCol');
+  const consolaCol     = document.getElementById('consolaCol');
+  const resizer1       = document.getElementById('resizer1');
+  const resizer2       = document.getElementById('resizer2');
+  const tkMaximitzaBtn = document.getElementById('tkMaximitzaBtn');
+  const tkCol          = document.getElementById('tkCol');
+  const tkWindowEl     = document.getElementById('tkWindow');
+  const tkCloseBtn     = document.getElementById('tkCloseBtn');
+
+  // ── SharedArrayBuffer per a input() interactiu ────────────────────────
+  // Requereix les capçaleres COOP/COEP que envia server.py.
+  // Layout: [Int32: estat] [Int32: longitud] [Uint8[]: dades UTF-8]
+  const sharedBuf = typeof SharedArrayBuffer !== 'undefined'
+    ? new SharedArrayBuffer(8 + 4096)
+    : null;
+  const ctrlArr = sharedBuf ? new Int32Array(sharedBuf, 0, 2) : null;
+
+  // ── SharedArrayBuffer dedicat al pont RPC sincron del shim de tkinter ──
+  // Separat del d'input() perque les dues espera no s'interfereixin.
+  const tkSharedBuf = typeof SharedArrayBuffer !== 'undefined'
+    ? new SharedArrayBuffer(8 + 8192)
+    : null;
+  const tkCtrlArr = tkSharedBuf ? new Int32Array(tkSharedBuf, 0, 2) : null;
+
+  // Codi font del shim de tkinter i del shim de paho.mqtt.client (model B):
+  // fitxers externs a assets/, enviats al worker en l'init. El de tkinter
+  // s'escriu al FS virtual del worker; el de paho es registra a sys.modules
+  // abans de cada execucio.
+  const [tkinterShimSource, pahoShimSource, fsShimSource, httpShimSource] = await Promise.all([
+    fetch(new URL('assets/tkinter_shim.py', window.location.href).href).then((r) => r.text()),
+    fetch(new URL('assets/paho_mqtt_shim.py', window.location.href).href).then((r) => r.text()),
+    fetch(new URL('assets/fs_shim.py', window.location.href).href).then((r) => r.text()),
+    fetch(new URL('assets/http_shim.py', window.location.href).href).then((r) => r.text()),
+  ]);
+
+  if (!sharedBuf) {
+    // Avisa si la pàgina no s'ha servit amb les capçaleres correctes
+    const warn = document.createElement('span');
+    warn.style.cssText = 'color:var(--warn);font-size:.75rem;';
+    warn.textContent = ' · input() / tkinter no disponibles (usa python3 server.py)';
+    document.querySelector('.status-row').appendChild(warn);
+  }
+
+  // ── Clau localStorage i fitxers per defecte ───────────────────────────
+  const CLAU_LS = 'python-ide-project';
+
+  const fitxersPerDefecte = [
+    {
+      name: 'main.py',
+      content:
+`import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(0, 2 * np.pi, 300)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+axes[0].plot(x, np.sin(x), color='steelblue', linewidth=2)
+axes[0].set_title('Sinus')
+axes[0].set_xlabel('x')
+axes[0].grid(True, alpha=0.3)
+
+axes[1].plot(x, np.cos(x), color='tomato', linewidth=2)
+axes[1].set_title('Cosinus')
+axes[1].set_xlabel('x')
+axes[1].grid(True, alpha=0.3)
+
+fig.suptitle('Funcions trigonometriques', fontsize=13)
+plt.tight_layout()
+plt.show()
+`,
+    },
+    {
+      name: 'helper.py',
+      content:
+`def saluda(nom):
+    return f"Hola {nom}, aixo ve d'un fitxer .py importat des d'un altre."
+`,
+    },
+  ];
+
+  // ── Exemples predefinits: índex carregat des d'exemples/index.txt ──────
+  // Cada línia: categoria;id;breu-explicacio . El .zip de cada exemple
+  // (exemples/<id>.zip) nomes es descarrega quan l'usuari el selecciona
+  // (o via #run:/#open: _prj=ex:<id>) — carrega mandrosa, no a l'inici.
+  let exemplesIndex = [];   // [{ categoria, id, nom }] — nom = breu explicacio
+
+  async function carregaIndexExemples() {
+    try {
+      const resp = await fetch(new URL('exemples/index.txt', window.location.href).href);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const text = await resp.text();
+      exemplesIndex = text.split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0)
+        .map((l) => {
+          const [categoria, id, ...resta] = l.split(';');
+          return { categoria: (categoria || '').trim(), id: (id || '').trim(), nom: resta.join(';').trim() };
+        })
+        .filter((e) => e.categoria && e.id);
+    } catch (e) {
+      console.warn('[py-web] No s\'ha pogut carregar exemples/index.txt: ' + e.message);
+      exemplesIndex = [];
+    }
+  }
+
+
+  // ── Càrrega de projecte i variables via #run:/#open: a la URL ──────────
+  // Sintaxi: #run:<clau>=<valor>&<clau>=<valor>...  (o #open: per no executar)
+  //   - Clau reservada _prj indica l'origen del projecte:
+  //       _prj=zip:<url>   -> descarrega i importa un ZIP (com "Importa ZIP…")
+  //       _prj=ex:<id>     -> carrega un exemple predefinit (com el desplegable)
+  //   - Cas simple (sense cap '='): tot el que segueix a #run:/#open: es
+  //     tracta directament com una URL de ZIP (mateix patró que altres
+  //     projectes de Jordi, p.ex. binefa.com/iot-v/#run:<url>.zip).
+  //   - Qualsevol altra clau (topic, sid, ...) es passa literalment com a
+  //     str a l'espai global de Python (globals()) del codi que s'executa.
+  //   - Valor SENSE cometa inicial: es decodifica amb decodeURIComponent
+  //     (pensat per a generació automàtica, p.ex. una pàgina amb <iframe>
+  //     que construeix la URL sola).
+  //   - Valor AMB cometa inicial (' o "): es llegeix literal fins a la
+  //     mateixa cometa de tancament, a l'estil Python ('Una "prova"' o
+  //     "Una 'prova'"), sense cap escapament. Pensat per a edicio manual
+  //     (demos en directe).
+  const DOMINIS_PERMESOS = [
+    'berkeley.edu', 'fje.edu', 'binefa.com', 'binefa.cat', 'binefa.net',
+    'things.cat', 'electronics.cat', 'popotamo.cat', 'github.com',
+    'github.io', 'xavierpi.com', 'collados.org',
+  ];
+
+  function dominiPermes(urlStr) {
+    try {
+      const host = new URL(urlStr).hostname.toLowerCase();
+      return DOMINIS_PERMESOS.some((d) => host === d || host.endsWith('.' + d));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Parseja "clau=valor&clau=valor..." respectant cometes a l'estil Python.
+  function parseHashParams(str) {
+    const result = {};
+    let i = 0;
+    const n = str.length;
+    while (i < n) {
+      if (str[i] === '&') { i++; continue; }
+      const eq = str.indexOf('=', i);
+      if (eq === -1) break;
+      const clau = str.slice(i, eq);
+      i = eq + 1;
+      let valor = null;
+      if (str[i] === "'" || str[i] === '"') {
+        const cometa = str[i];
+        const fi = str.indexOf(cometa, i + 1);
+        if (fi === -1) {
+          console.warn(`[py-web] Cometa sense tancar per a la variable "${clau}" al hash de la URL; s'ignora aquesta variable.`);
+          i = n;
+        } else {
+          valor = str.slice(i + 1, fi);
+          i = fi + 1;
+        }
+      } else {
+        let fi = str.indexOf('&', i);
+        if (fi === -1) fi = n;
+        const cru = str.slice(i, fi);
+        try {
+          valor = decodeURIComponent(cru);
+        } catch (e) {
+          console.warn(`[py-web] Error decodificant la variable "${clau}" del hash de la URL: ${e.message}`);
+          valor = cru;
+        }
+        i = fi;
+      }
+      if (valor !== null) {
+        if (clau in result) {
+          console.warn(`[py-web] Variable "${clau}" duplicada al hash de la URL; es fa servir l'últim valor.`);
+        }
+        result[clau] = valor;
+      }
+      if (str[i] === '&') i++;
+    }
+    return result;
+  }
+
+  function parseHashDirective() {
+    const hash = window.location.hash;
+    let mode, resta;
+    if (hash.startsWith('#run:')) { mode = 'run'; resta = hash.slice(5); }
+    else if (hash.startsWith('#open:')) { mode = 'open'; resta = hash.slice(6); }
+    else return null;
+    if (!resta) return null;
+
+    if (!resta.includes('=')) {
+      // Cas simple: tot el hash es una URL de ZIP directa.
+      return { mode, prj: { tipus: 'zip', valor: resta }, vars: {} };
+    }
+
+    const vars = parseHashParams(resta);
+    const prjRaw = vars['_prj'];
+    delete vars['_prj'];
+    let prj = null;
+    if (prjRaw) {
+      if (prjRaw.startsWith('zip:')) prj = { tipus: 'zip', valor: prjRaw.slice(4) };
+      else if (prjRaw.startsWith('ex:')) prj = { tipus: 'ex', valor: prjRaw.slice(3) };
+      else console.warn(`[py-web] _prj amb format desconegut al hash de la URL: "${prjRaw}" (s'esperava "zip:..." o "ex:...")`);
+    }
+    return { mode, prj, vars };
+  }
+
+  function nomDesDeUrl(urlStr) {
+    try {
+      const path = new URL(urlStr).pathname;
+      const base = path.split('/').filter(Boolean).pop() || 'projecte';
+      return decodeURIComponent(base.replace(/\.zip$/i, ''));
+    } catch (_) {
+      return 'projecte';
+    }
+  }
+
+  // Nucli comú de càrrega d'un ZIP (remot o local): desempaqueta amb JSZip
+  // i substitueix l'estat del projecte actual (fitxers .py + imatges).
+  // No fa cap comprovació de domini — la fa, si cal, qui la crida.
+  async function carregaZipDesDe(zipUrl) {
+    try {
+      const resp = await fetch(zipUrl);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      const zip = await JSZip.loadAsync(blob);
+      const nousFitxers = [];
+      const nousAssets  = [];
+      const extensioImatge = /\.(png|jpe?g|gif|webp|bmp)$/i;
+      for (const [nom, entrada] of Object.entries(zip.files)) {
+        if (entrada.dir) continue;
+        if (nom.endsWith('.py')) nousFitxers.push({ name: nom, content: await entrada.async('string') });
+        else if (extensioImatge.test(nom)) nousAssets.push({ name: nom, b64: await entrada.async('base64') });
+      }
+      if (nousFitxers.length === 0) {
+        console.warn(`[py-web] El ZIP no conté cap fitxer .py: ${zipUrl}`);
+        alert('El projecte no conté cap fitxer .py.');
+        return false;
+      }
+      files     = nousFitxers;
+      assets    = nousAssets;
+      dataFiles = [];
+      activeIsData = false;
+      activeIdx = 0;
+      return true;
+    } catch (e) {
+      console.warn(`[py-web] Error carregant el ZIP (${zipUrl}): ${e.message}`);
+      alert('No s\'ha pogut carregar el projecte. Consulta la consola del navegador (F12) per més detalls; sovint es deu a un problema de CORS al servidor d\'origen.');
+      return false;
+    }
+  }
+
+  async function carregaProjecteRemot(zipUrl) {
+    if (!dominiPermes(zipUrl)) {
+      console.warn(`[py-web] Domini no permès per carregar un projecte remot: ${zipUrl}`);
+      alert('No es pot carregar el projecte: el domini d\'origen no està a la llista de dominis permesos.');
+      return false;
+    }
+    const ok = await carregaZipDesDe(zipUrl);
+    if (ok) nomProjecte = nomDesDeUrl(zipUrl);
+    return ok;
+  }
+
+  // Carrega un exemple predefinit pel seu id, descarregant exemples/<id>.zip
+  // (mateix origen que la pàgina: no cal comprovar dominiPermes). L'índex
+  // exemplesIndex ha d'estar carregat abans (vegeu carregaIndexExemples()).
+  async function carregaExempleDesDeHash(id) {
+    const ex = exemplesIndex.find((e) => e.id === id);
+    if (!ex) {
+      console.warn(`[py-web] Exemple predefinit no trobat: "${id}"`);
+      alert(`No s'ha trobat cap exemple predefinit amb l'identificador "${id}".`);
+      return false;
+    }
+    const zipUrl = new URL('exemples/' + id + '.zip', window.location.href).href;
+    const ok = await carregaZipDesDe(zipUrl);
+    if (ok) nomProjecte = id;
+    return ok;
+  }
+
+  // ── Estat del projecte ────────────────────────────────────────────────
+  let files       = [];
+  let activeIdx   = 0;
+  let nomProjecte = 'projecte';
+  let assets      = [];   // { name, b64 } — imatges (PhotoImage) del projecte
+  // Fitxers de dades creats/escrits pel codi de l'alumne amb open(...)
+  // (vegeu contextFitxersPyBinefaCat.md). Cada entrada:
+  //   { name, content, isText, size, tabOberta, brut }
+  // - content: text real si isText, o base64 si no (MAI es mostra a la UI).
+  // - tabOberta: false vol dir "tanca-la pero segueix enviant-se al worker".
+  // - brut: l'usuari hi ha editat des de l'ultima sincronitzacio amb el codi
+  //   (si es true, un fileChanged entrant NO la sobreescriu en silenci).
+  let dataFiles      = [];
+  let activeIsData   = false;  // true si la pestanya activa es un fitxer de dades
+  let activeDataIdx  = 0;      // index dins dataFiles quan activeIsData
+  let urlVars        = {};    // variables clau/valor rebudes per #run:/#open: (sempre str)
+  let autoRunPendent = false; // #run: ha carregat un projecte i espera que el worker estigui llest
+
+  function actualitzaTitol() {
+    document.title = nomProjecte + ' — IDE Python';
+  }
+
+  function renderAssets() {
+    assetsBar.innerHTML = '';
+    for (const a of assets) {
+      const chip = document.createElement('span');
+      chip.className = 'asset-chip';
+      chip.textContent = a.name;
+      const del = document.createElement('button');
+      del.textContent = '×';
+      del.title = 'Elimina ' + a.name;
+      del.addEventListener('click', () => {
+        assets = assets.filter((x) => x !== a);
+        renderAssets();
+        desaEstat();
+      });
+      chip.appendChild(del);
+      assetsBar.appendChild(chip);
+    }
+  }
+
+  // Converteix un ArrayBuffer a base64 sense desbordar la pila amb imatges grans
+  function bufferToBase64(buf) {
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(binary);
+  }
+
+  function carregaProjecte() {
+    try {
+      const raw = localStorage.getItem(CLAU_LS);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (Array.isArray(saved.files) && saved.files.length > 0) {
+          files       = saved.files;
+          activeIdx   = Math.min(saved.activeIdx ?? 0, files.length - 1);
+          nomProjecte = saved.nom ?? 'projecte';
+          assets      = Array.isArray(saved.assets) ? saved.assets : [];
+          dataFiles   = Array.isArray(saved.dataFiles) ? saved.dataFiles : [];
+          activeIsData = false;
+          activeDataIdx = 0;
+          nomProjecteEl.textContent = nomProjecte;
+          actualitzaTitol();
+          renderAssets();
+          return;
+        }
+      }
+    } catch (_) { /* Dades corrompudes */ }
+    files = fitxersPerDefecte.map(f => ({ ...f }));
+    activeIdx = 0;
+    assets = [];
+    dataFiles = [];
+    activeIsData = false;
+    activeDataIdx = 0;
+    actualitzaTitol();
+    renderAssets();
+  }
+
+  carregaProjecte();
+
+  // ── Desplegable d'exemples predefinits ────────────────────────────────
+  // Les categories i el seu ordre surten directament d'exemples/index.txt
+  // (ordre de primera aparició), no cal tocar el codi per afegir-ne una.
+  function omplePeselectorExemples() {
+    exemplesSelect.querySelectorAll('optgroup').forEach((og) => og.remove());
+    const categories = [];
+    for (const ex of exemplesIndex) {
+      if (!categories.includes(ex.categoria)) categories.push(ex.categoria);
+    }
+    for (const cat of categories) {
+      const og = document.createElement('optgroup');
+      og.label = cat;
+      for (const ex of exemplesIndex.filter((e) => e.categoria === cat)) {
+        const opt = document.createElement('option');
+        opt.value = ex.id;
+        opt.textContent = ex.nom;
+        og.appendChild(opt);
+      }
+      exemplesSelect.appendChild(og);
+    }
+  }
+  await carregaIndexExemples();
+  omplePeselectorExemples();
+
+  exemplesSelect.addEventListener('change', () => {
+    const id = exemplesSelect.value;
+    exemplesSelect.value = '';   // torna sempre al placeholder, no és un "estat" persistent
+    if (!id) return;
+    const ex = exemplesIndex.find((e) => e.id === id);
+    if (!ex) return;
+    if (!confirm('Es substituiran tots els fitxers del projecte actual per l\'exemple "' + ex.nom + '". Continuar?')) return;
+    (async () => {
+      exemplesSelect.disabled = true;
+      const ok = await carregaExempleDesDeHash(id);
+      exemplesSelect.disabled = false;
+      if (!ok) return;
+      nomProjecteEl.textContent = nomProjecte;
+      actualitzaTitol();
+      codeEditorEl.style.display = '';
+      dataFileEditorEl.style.display = 'none';
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: files[0].content } });
+      renderTabs();
+      renderAssets();
+      desaEstat();
+    })();
+  });
+
+  function desaEstat() {
+    if (!activeIsData) files[activeIdx].content = editor.state.doc.toString();
+    else sincronitzaTextareaActiu();
+    try {
+      localStorage.setItem(CLAU_LS, JSON.stringify({ nom: nomProjecte, files, activeIdx, assets, dataFiles }));
+      mostraDesat();
+    } catch (_) { }
+  }
+
+  let desatTimer = null;
+  function mostraDesat() {
+    savedIndicator.classList.add('visible');
+    clearTimeout(desatTimer);
+    desatTimer = setTimeout(() => savedIndicator.classList.remove('visible'), 2000);
+  }
+
+  let timerId = null;
+  function planificaAutoguardat() {
+    clearTimeout(timerId);
+    timerId = setTimeout(desaEstat, 1000);
+  }
+
+  // ── Editor CodeMirror 6 ───────────────────────────────────────────────
+  const editor = new EditorView({
+    doc: files[activeIdx].content,
+    extensions: [
+      basicSetup,
+      python(),
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) planificaAutoguardat();
+      }),
+    ],
+    parent: document.getElementById('codeEditor'),
+  });
+
+  // ── Edició del nom del projecte ───────────────────────────────────────
+  nomProjecteEl.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'nom-projecte-input';
+    input.value = nomProjecte;
+    nomProjecteEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    function confirma() {
+      nomProjecte = input.value.trim() || nomProjecte;
+      nomProjecteEl.textContent = nomProjecte;
+      input.replaceWith(nomProjecteEl);
+      actualitzaTitol();
+      desaEstat();
+    }
+    input.addEventListener('blur', confirma);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') { input.value = nomProjecte; input.blur(); }
+    });
+  });
+
+  // ── Drecera Ctrl+Enter / Cmd+Enter ───────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      if (!runBtn.disabled) runBtn.click();
+    }
+  });
+
+  // ── Gestió de pestanyes ───────────────────────────────────────────────
+  function renderTabs() {
+    tabBar.innerHTML = '';
+    files.forEach((f, i) => {
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (!activeIsData && i === activeIdx ? ' active' : '');
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'tab-name';
+      nameSpan.textContent = f.name;
+      nameSpan.addEventListener('dblclick', () => iniciaReanomenament(i, nameSpan));
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'tab-close';
+      closeBtn.textContent = '×';
+      closeBtn.title = 'Tanca fitxer';
+      closeBtn.addEventListener('click', (e) => { e.stopPropagation(); tancaFitxer(i); });
+
+      tab.appendChild(nameSpan);
+      tab.appendChild(closeBtn);
+      tab.addEventListener('click', () => canviaPestanyaFitxer(i));
+      tabBar.appendChild(tab);
+    });
+
+    // Pestanyes de fitxers de dades (creats pel codi amb open(...)): nomes
+    // les que tenen tabOberta (les "tancades" segueixen enviant-se al
+    // worker pero no reapareixen a la UI).
+    dataFiles.forEach((df, idx) => {
+      if (!df.tabOberta) return;
+      const tab = document.createElement('div');
+      tab.className = 'tab tab-data' + (activeIsData && idx === activeDataIdx ? ' active' : '');
+      if (df.pendent) tab.title = 'El codi ha escrit un contingut nou en aquest fitxer';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'tab-name';
+      nameSpan.textContent = df.name;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'tab-close';
+      closeBtn.textContent = '×';
+      closeBtn.title = 'Tanca fitxer de dades';
+      closeBtn.addEventListener('click', (e) => { e.stopPropagation(); demanaTancaDataFile(idx); });
+
+      tab.appendChild(nameSpan);
+      tab.appendChild(closeBtn);
+      tab.addEventListener('click', () => canviaPestanyaData(idx));
+      tabBar.appendChild(tab);
+    });
+
+    const newBtn = document.createElement('button');
+    newBtn.className = 'tab-new';
+    newBtn.textContent = '+';
+    newBtn.title = 'Nou fitxer .py';
+    newBtn.addEventListener('click', nouFitxer);
+    tabBar.appendChild(newBtn);
+  }
+
+  function canviaPestanyaFitxer(i) {
+    if (!activeIsData && i === activeIdx) return;
+    if (activeIsData) sincronitzaTextareaActiu();
+    else files[activeIdx].content = editor.state.doc.toString();
+    activeIsData = false;
+    activeIdx = i;
+    codeEditorEl.style.display = '';
+    dataFileEditorEl.style.display = 'none';
+    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: files[i].content } });
+    renderTabs();
+  }
+
+  function nouFitxer() {
+    const nom = prompt('Nom del fitxer:', 'nou.py');
+    if (!nom) return;
+    const nomNet = nom.endsWith('.py') ? nom : nom + '.py';
+    if (activeIsData) sincronitzaTextareaActiu();
+    else files[activeIdx].content = editor.state.doc.toString();
+    files.push({ name: nomNet, content: '' });
+    activeIsData = false;
+    activeIdx = files.length - 1;
+    codeEditorEl.style.display = '';
+    dataFileEditorEl.style.display = 'none';
+    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: '' } });
+    renderTabs();
+    planificaAutoguardat();
+  }
+
+  function tancaFitxer(i) {
+    if (files.length === 1) return;
+    if (!activeIsData) files[activeIdx].content = editor.state.doc.toString();
+    files.splice(i, 1);
+    if (activeIdx >= files.length) activeIdx = files.length - 1;
+    else if (activeIdx > i) activeIdx--;
+    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: files[activeIdx].content } });
+    renderTabs();
+    planificaAutoguardat();
+  }
+
+  function iniciaReanomenament(i, nameSpan) {
+    const input = document.createElement('input');
+    input.className = 'tab-rename-input';
+    input.value = files[i].name;
+    nameSpan.replaceWith(input);
+    input.focus();
+    input.select();
+
+    function confirma() {
+      const nouNom = input.value.trim() || files[i].name;
+      files[i].name = nouNom.endsWith('.py') ? nouNom : nouNom + '.py';
+      renderTabs();
+      planificaAutoguardat();
+    }
+    input.addEventListener('blur', confirma);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') { input.value = files[i].name; input.blur(); }
+    });
+  }
+
+  // ── Pestanyes de fitxers de dades (open() del codi de l'alumne) ───────
+  // Vegeu contextFitxersPyBinefaCat.md per al disseny complet.
+
+  function canviaPestanyaData(idx) {
+    if (activeIsData && idx === activeDataIdx) return;
+    if (activeIsData) sincronitzaTextareaActiu();
+    else files[activeIdx].content = editor.state.doc.toString();
+    activeIsData = true;
+    activeDataIdx = idx;
+    codeEditorEl.style.display = 'none';
+    dataFileEditorEl.style.display = 'flex';
+    mostraDataFileTab(idx);
+    renderTabs();
+  }
+
+  // Reflecteix el contingut (o el missatge "Fitxer binari, N bytes") d'una
+  // pestanya de dades al textarea, i mostra/amaga l'avís de canvi pendent.
+  function mostraDataFileTab(idx) {
+    const df = dataFiles[idx];
+    if (!df) return;
+    if (df.isText) {
+      dataFileTextarea.value = df.content;
+      dataFileTextarea.readOnly = false;
+    } else {
+      // Mai es mostra el contingut real ni en base64 -- nomes la mida.
+      dataFileTextarea.value = `Fitxer binari, ${df.size} bytes`;
+      dataFileTextarea.readOnly = true;
+    }
+    actualitzaBanner();
+  }
+
+  function actualitzaBanner() {
+    const df = activeIsData ? dataFiles[activeDataIdx] : null;
+    fsBanner.style.display = (df && df.pendent) ? 'flex' : 'none';
+  }
+
+  // Sincronitza el textarea cap a dataFiles[activeDataIdx] (equivalent al
+  // "files[activeIdx].content = editor.state.doc.toString()" dels .py).
+  // Marca 'brut' nomes si el contingut ha canviat de veritat.
+  function sincronitzaTextareaActiu() {
+    if (!activeIsData) return;
+    const df = dataFiles[activeDataIdx];
+    if (!df || !df.isText) return;   // el textarea d'un binari no és editable
+    if (dataFileTextarea.value !== df.content) {
+      df.content = dataFileTextarea.value;
+      df.brut = true;
+    }
+  }
+
+  dataFileTextarea.addEventListener('input', () => {
+    if (!activeIsData) return;
+    const df = dataFiles[activeDataIdx];
+    if (!df || !df.isText) return;
+    df.content = dataFileTextarea.value;
+    df.brut = true;
+    planificaAutoguardat();
+  });
+
+  fsBannerRefresca.addEventListener('click', () => {
+    const df = dataFiles[activeDataIdx];
+    if (!df || !df.pendent) return;
+    df.content = df.pendent.content;
+    df.isText  = df.pendent.isText;
+    df.size    = df.pendent.size;
+    df.pendent = null;
+    df.brut    = false;
+    mostraDataFileTab(activeDataIdx);
+    planificaAutoguardat();
+  });
+
+  fsBannerIgnora.addEventListener('click', () => {
+    fsBanner.style.display = 'none';
+  });
+
+  // Torna la vista principal a la pestanya .py activa (usat quan es tanca
+  // la pestanya de dades que estava mostrant-se).
+  function tornaAFitxerActiu() {
+    activeIsData = false;
+    codeEditorEl.style.display = '';
+    dataFileEditorEl.style.display = 'none';
+    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: files[activeIdx].content } });
+  }
+
+  // -- Confirmació de tancament (3 opcions: vegeu contextFitxersPyBinefaCat.md) --
+  let tancaDataPendent = null;
+
+  function demanaTancaDataFile(idx) {
+    tancaDataPendent = idx;
+    fsModalText.textContent = `Tanca "${dataFiles[idx].name}": què vols fer?`;
+    fsModalOverlay.style.display = 'flex';
+  }
+
+  function tancaModal() {
+    fsModalOverlay.style.display = 'none';
+    tancaDataPendent = null;
+  }
+
+  fsModalElimina.addEventListener('click', () => {
+    if (tancaDataPendent === null) return;
+    const idx = tancaDataPendent;
+    const eraActiva = activeIsData && activeDataIdx === idx;
+    dataFiles.splice(idx, 1);
+    if (eraActiva) tornaAFitxerActiu();
+    else if (activeIsData && activeDataIdx > idx) activeDataIdx--;
+    tancaModal();
+    renderTabs();
+    planificaAutoguardat();
+  });
+
+  fsModalNomesTanca.addEventListener('click', () => {
+    if (tancaDataPendent === null) return;
+    const idx = tancaDataPendent;
+    dataFiles[idx].tabOberta = false;
+    if (activeIsData && activeDataIdx === idx) tornaAFitxerActiu();
+    tancaModal();
+    renderTabs();
+    planificaAutoguardat();
+  });
+
+  fsModalCancela.addEventListener('click', tancaModal);
+
+  // Rebuda d'un canvi de fitxer notificat pel shim de Python (fs_shim.py),
+  // via worker.js: crea la pestanya si no existia, o l'actualitza seguint
+  // la regla de "brut" (no trepitjar una edició manual encara no re-executada).
+  function gestionaFileChanged(name, content, isText, size) {
+    let df = dataFiles.find((d) => d.name === name);
+    if (!df) {
+      df = { name, content, isText, size, tabOberta: true, brut: false, pendent: null };
+      dataFiles.push(df);
+    } else if (!df.brut) {
+      df.content = content;
+      df.isText  = isText;
+      df.size    = size;
+      df.pendent = null;
+    } else {
+      df.pendent = { content, isText, size };
+    }
+    renderTabs();
+    if (activeIsData && dataFiles[activeDataIdx] === df) mostraDataFileTab(activeDataIdx);
+    planificaAutoguardat();
+  }
+
+  // ── Exportació / Importació ZIP ───────────────────────────────────────
+  exportBtn.addEventListener('click', async () => {
+    if (activeIsData) sincronitzaTextareaActiu();
+    else files[activeIdx].content = editor.state.doc.toString();
+    const zip = new JSZip();
+    for (const f of files) zip.file(f.name, f.content);
+    for (const a of assets) zip.file(a.name, a.b64, { base64: true });
+    // Nomes els fitxers de dades amb la pestanya VISIBLE (no tancada)
+    // s'inclouen al ZIP -- igual que files/assets.
+    for (const df of dataFiles) {
+      if (!df.tabOberta) continue;
+      if (df.isText) zip.file(df.name, df.content);
+      else zip.file(df.name, df.content, { base64: true });
+    }
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url  = URL.createObjectURL(blob);
+    const a2   = Object.assign(document.createElement('a'), { href: url, download: nomProjecte + '.zip' });
+    a2.click();
+    URL.revokeObjectURL(url);
+  });
+
+  importBtn.addEventListener('click', () => importInput.click());
+
+  importImageBtn.addEventListener('click', () => importImageInput.click());
+
+  importImageInput.addEventListener('change', async () => {
+    const triades = Array.from(importImageInput.files || []);
+    importImageInput.value = '';
+    for (const f of triades) {
+      const buf = await f.arrayBuffer();
+      const b64 = bufferToBase64(buf);
+      // Si ja existia una imatge amb el mateix nom, la sobreescrivim
+      assets = assets.filter((a) => a.name !== f.name);
+      assets.push({ name: f.name, b64 });
+    }
+    renderAssets();
+    desaEstat();
+  });
+
+  importInput.addEventListener('change', async () => {
+    const file = importInput.files[0];
+    if (!file) return;
+    importInput.value = '';
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const nousFitxers   = [];
+      const nousAssets    = [];
+      const nousDataFiles = [];
+      const extensioImatge = /\.(png|jpe?g|gif|webp|bmp)$/i;
+      for (const [nom, entrada] of Object.entries(zip.files)) {
+        if (entrada.dir) continue;
+        if (nom.endsWith('.py')) {
+          nousFitxers.push({ name: nom, content: await entrada.async('string') });
+        } else if (extensioImatge.test(nom)) {
+          nousAssets.push({ name: nom, b64: await entrada.async('base64') });
+        } else if (!nom.includes('/')) {
+          // Qualsevol altre fitxer a l'arrel del ZIP: es tracta com un
+          // fitxer de dades (mateixos que exportBtn hi ha inclòs).
+          const b64 = await entrada.async('base64');
+          const binari = atob(b64);
+          let esText = true, contingut = null;
+          try {
+            contingut = new TextDecoder('utf-8', { fatal: true }).decode(
+              Uint8Array.from(binari, (c) => c.charCodeAt(0))
+            );
+          } catch (_) { esText = false; }
+          nousDataFiles.push({
+            name: nom,
+            content: esText ? contingut : b64,
+            isText: esText,
+            size: binari.length,
+            tabOberta: true,
+            brut: false,
+            pendent: null,
+          });
+        }
+      }
+      if (nousFitxers.length === 0) { alert('El ZIP no conté cap fitxer .py'); return; }
+      files       = nousFitxers;
+      assets      = nousAssets;
+      dataFiles   = nousDataFiles;
+      activeIsData = false;
+      activeIdx   = 0;
+      codeEditorEl.style.display = '';
+      dataFileEditorEl.style.display = 'none';
+      nomProjecte = file.name.replace(/\.zip$/i, '');
+      nomProjecteEl.textContent = nomProjecte;
+      actualitzaTitol();
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: files[0].content } });
+      renderTabs();
+      renderAssets();
+      desaEstat();
+    } catch (e) { alert('Error important el ZIP: ' + e.message); }
+  });
+
+  esborraBtn.addEventListener('click', () => {
+    if (!confirm('Segur? S\'esborraran tots els canvis no exportats i es tornarà als fitxers per defecte.')) return;
+    localStorage.removeItem(CLAU_LS);
+    files       = fitxersPerDefecte.map(f => ({ ...f }));
+    dataFiles   = [];
+    activeIsData = false;
+    activeIdx   = 0;
+    codeEditorEl.style.display = '';
+    dataFileEditorEl.style.display = 'none';
+    nomProjecte = 'projecte';
+    nomProjecteEl.textContent = nomProjecte;
+    actualitzaTitol();
+    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: files[0].content } });
+    renderTabs();
+  });
+
+  // ── Comptador de pols ─────────────────────────────────────────────────
+  let pulse = 0;
+  setInterval(() => { pulse++; pulseCounter.textContent = 'batec: ' + pulse; }, 150);
+
+  // ── Consola: afegeix línia ────────────────────────────────────────────
+  function logLine(text, cls) {
+    const div = document.createElement('div');
+    div.className = cls;
+    div.textContent = text;
+    consoleOut.appendChild(div);
+    consoleOut.scrollTop = consoleOut.scrollHeight;
+    copyBtn.disabled = false;
+  }
+
+  // ── input() interactiu: mostra camp de text en línia ─────────────────
+  let pendingInputEl = null;
+
+  function mostraInputPrompt(prompt) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'stdin-line';
+
+    const promptSpan = document.createElement('span');
+    promptSpan.className = 'stdin-prompt';
+    promptSpan.textContent = prompt;
+
+    const inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.className = 'stdin-input';
+    inputEl.setAttribute('autocomplete', 'off');
+    inputEl.setAttribute('spellcheck', 'false');
+
+    wrapper.appendChild(promptSpan);
+    wrapper.appendChild(inputEl);
+    consoleOut.appendChild(wrapper);
+    consoleOut.scrollTop = consoleOut.scrollHeight;
+    copyBtn.disabled = false;
+    inputEl.focus();
+
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        inputEl.disabled = true;
+        enviaInput(inputEl.value);
+      }
+    });
+
+    return inputEl;
+  }
+
+  function enviaInput(value) {
+    if (!ctrlArr || !sharedBuf) return;
+    const bytes = new TextEncoder().encode(value);
+    const maxLen = 4096;
+    new Uint8Array(sharedBuf, 8).set(bytes.subarray(0, maxLen));
+    ctrlArr[1] = Math.min(bytes.length, maxLen);
+    Atomics.store(ctrlArr, 0, 1);   // Marca la resposta com a disponible
+    Atomics.notify(ctrlArr, 0, 1);  // Desperta el worker
+    pendingInputEl = null;
+  }
+
+  // ── Renderer del shim de tkinter: tradueix operacions a DOM real ──────
+  const tkNodes  = new Map();    // id de widget -> element DOM
+  const tkVars   = new Map();    // id de variable -> { value, radios: [{id, el, value}] }
+  const tkImages = new Map();    // id de PhotoImage -> data URL (o null si buida)
+  let tkPendingEvent = null;    // resolver pendent d'un wait_event() del mainloop
+
+  function respondTk(obj) {
+    if (!tkSharedBuf) return;
+    const json  = JSON.stringify(obj ?? null);
+    const bytes = new TextEncoder().encode(json);
+    new Uint8Array(tkSharedBuf, 8).set(bytes.subarray(0, 8192));
+    tkCtrlArr[1] = Math.min(bytes.length, 8192);
+    Atomics.store(tkCtrlArr, 0, 1);
+    Atomics.notify(tkCtrlArr, 0, 1);
+  }
+
+  // Crida quan passa un esdeveniment real (clic, etc.). Si el mainloop encara
+  // no ha demanat el seguent event (wait_event), l'esdeveniment es descarta
+  // (acceptable en aquest v0: nomes pot passar en una finestra molt curta).
+  function tkFireEvent(eventObj) {
+    // Cua NO bloquejant (postMessage normal, sense Atomics) per a Tk.update():
+    // s'envia SEMPRE, independentment de si mainloop() hi ha algu esperant.
+    // Aixo permet combinar una finestra tkinter amb codi asincron (p.ex.
+    // MQTT) sense que mainloop() bloquegi mai el fil del worker.
+    if (worker) worker.postMessage({ type: 'tkEvent', event: eventObj });
+
+    // Mecanisme classic (bloquejant, per a mainloop()): nomes s'entrega si
+    // en aquest instant el worker esta esperant dins wait_event().
+    if (tkPendingEvent) {
+      const resolve = tkPendingEvent;
+      tkPendingEvent = null;
+      resolve(eventObj);
+    }
+  }
+
+  // ── Redimensionar columnes arrossegant els separadors ──────────────────
+  // Es fan servir directament els amples en pixels mesurats com a valors
+  // "fr": la unitat fr nomes representa una proporcio de l'espai restant,
+  // aixi que uns pixels mesurats ara son una proporcio igual de valida que
+  // qualsevol altre numero -- no cal convertir res.
+  let proporcionsColumnes = { codi: 1, consola: 1, tk: 1 };
+  try {
+    const desades = JSON.parse(localStorage.getItem('py-web-proporcions-columnes') || 'null');
+    if (desades && ['codi', 'consola', 'tk'].every((k) => typeof desades[k] === 'number' && desades[k] > 0)) {
+      proporcionsColumnes = desades;
+    }
+  } catch (_) { /* localStorage no disponible o valor corrupte: es fan servir els valors per defecte */ }
+
+  const mobil = window.matchMedia('(max-width: 760px)');
+  let tkMaximitzat = false;   // declarada aqui perque aplicaProporcionsColumnes() ja la consulta
+
+  function aplicaProporcionsColumnes() {
+    if (mobil.matches || tkMaximitzat) return;   // en mobil el CSS ja fa l'apilat vertical
+    const { codi, consola, tk } = proporcionsColumnes;
+    mainGrid.style.gridTemplateColumns = mainGrid.classList.contains('has-tk')
+      ? `${codi}fr 6px ${consola}fr 6px ${tk}fr`
+      : `${codi}fr 6px ${consola}fr`;
+  }
+  aplicaProporcionsColumnes();
+  mobil.addEventListener('change', aplicaProporcionsColumnes);
+
+  function desaProporcionsColumnes() {
+    try { localStorage.setItem('py-web-proporcions-columnes', JSON.stringify(proporcionsColumnes)); }
+    catch (_) { /* quota plena o localStorage no disponible: no cal bloquejar per aixo */ }
+  }
+
+  function activaResizer(resizerEl, colA, clauA, colB, clauB) {
+    let arrossegant = false;
+    let amplaTotalPx = 0;
+    const MIN_PX = 160;
+
+    resizerEl.addEventListener('pointerdown', (ev) => {
+      if (mobil.matches || tkMaximitzat) return;
+      arrossegant = true;
+      resizerEl.classList.add('dragging');
+      resizerEl.setPointerCapture(ev.pointerId);
+      amplaTotalPx = colA.getBoundingClientRect().width + colB.getBoundingClientRect().width;
+    });
+    resizerEl.addEventListener('pointermove', (ev) => {
+      if (!arrossegant) return;
+      const rectA = colA.getBoundingClientRect();
+      let amplaA = ev.clientX - rectA.left;
+      amplaA = Math.max(MIN_PX, Math.min(amplaTotalPx - MIN_PX, amplaA));
+      proporcionsColumnes[clauA] = amplaA;
+      proporcionsColumnes[clauB] = amplaTotalPx - amplaA;
+      aplicaProporcionsColumnes();
+    });
+    function finalitzaArrossegament() {
+      if (!arrossegant) return;
+      arrossegant = false;
+      resizerEl.classList.remove('dragging');
+      desaProporcionsColumnes();
+    }
+    resizerEl.addEventListener('pointerup', finalitzaArrossegament);
+    resizerEl.addEventListener('pointercancel', finalitzaArrossegament);
+  }
+  activaResizer(resizer1, codiCol, 'codi', consolaCol, 'consola');
+  activaResizer(resizer2, consolaCol, 'consola', tkCol, 'tk');
+
+  // ── Maximitzar / restaura la finestra Tk (com el canvas de Snap!) ──────
+  const ICONA_MAXIMITZA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+  const ICONA_RESTAURA  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 3 9 9 3 9"/><polyline points="15 21 15 15 21 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+
+  // Es posa a 'true' nomes quan l'execucio ha vingut d'un #run: de la URL
+  // (mai en una execucio manual amb el botó "Executa") -- es consumeix
+  // (torna a false) la primera vegada que apareix una finestra Tk durant
+  // AQUESTA execucio. Vegeu aplicaDirectivaHash() i mostraFinestraTk().
+  let pendentAutoMaximitzarTk = false;
+
+  function aplicaTkMaximitzat() {
+    mainGrid.classList.toggle('tk-maximitzat', tkMaximitzat);
+    document.body.classList.toggle('tk-maximitzat', tkMaximitzat);
+    tkMaximitzaBtn.innerHTML = tkMaximitzat ? ICONA_RESTAURA : ICONA_MAXIMITZA;
+    tkMaximitzaBtn.title = tkMaximitzat
+      ? 'Restaura la vista partida'
+      : 'Maximitza la finestra Tk';
+    tkMaximitzaBtn.setAttribute('aria-label', tkMaximitzaBtn.title);
+    if (tkMaximitzat) {
+      mainGrid.style.gridTemplateColumns = '1fr';
+    } else {
+      aplicaProporcionsColumnes();
+    }
+  }
+  aplicaTkMaximitzat();   // icona inicial correcta abans que hi hagi cap finestra Tk
+
+  tkMaximitzaBtn.addEventListener('click', () => {
+    tkMaximitzat = !tkMaximitzat;
+    aplicaTkMaximitzat();
+  });
+
+  function mostraFinestraTk() {
+    mainGrid.classList.add('has-tk');
+    if (pendentAutoMaximitzarTk) {
+      pendentAutoMaximitzarTk = false;
+      tkMaximitzat = true;
+    }
+    aplicaTkMaximitzat();
+  }
+
+  function netejaFinestraTk() {
+    tkNodes.clear();
+    tkVars.clear();
+    tkImages.clear();
+    tkPendingEvent = null;
+    tkWindowEl.innerHTML = '';
+    mainGrid.classList.remove('has-tk');
+    tkMaximitzat = false;
+    aplicaTkMaximitzat();
+  }
+
+  // Tkinter passa font=(family, size[, 'bold'|'italic'|...]); el shorthand
+  // CSS "font" NOMES es valid amb l'ordre [estil] [pes] mida/alcada familia
+  // — un simple join() amb l'ordre de tkinter ("Arial 10 bold") es CSS no
+  // valid i el navegador l'ignora sencer (ni tan sols aplica la mida).
+  function _tkFontCss(v) {
+    if (!Array.isArray(v)) return v;
+    const [family, size, ...estils] = v;
+    const parts = [];
+    if (estils.includes('italic')) parts.push('italic');
+    if (estils.includes('bold')) parts.push('bold');
+    if (size) parts.push((typeof size === 'number' ? size : parseFloat(size)) + 'px');
+    if (family) parts.push(family);
+    return parts.join(' ');
+  }
+
+  function tkApplyOpts(el, opts) {
+    if (!el || !opts) return;
+    // Widgets compostos (p.ex. Radiobutton: <label><input>+<span></label>)
+    // poden marcar _tkTextTarget per dir on ha d'anar el text, en lloc
+    // de sobreescriure tot el contingut de l'element arrel.
+    const textTarget = el._tkTextTarget || el;
+    for (const [k, v] of Object.entries(opts)) {
+      if (k === 'text') {
+        if (el.tagName === 'INPUT') el.value = v; else textTarget.textContent = v;
+      } else if (k === 'bg' || k === 'background') el.style.background = v;
+      else if (k === 'fg' || k === 'foreground') el.style.color = v;
+      else if (k === 'font') el.style.font = _tkFontCss(v);
+      else if (k === 'show') el.type = v ? 'password' : 'text';   // Entry(show='*')
+      else if (k === 'state') el.disabled = (v === 'disabled');
+      else if (k === 'width') el.style.width = (typeof v === 'number' ? v + 'ch' : v);
+      else if (k === '_title') tkWindowHeaderTitle(v);
+      else if (k === '_geometry') { /* "300x200" — es pot fer servir per fixar tkWindowEl.style.width/height si cal */ }
+      else if (k === 'image') {
+        // v: {"__photoimage__": id} (serialitzat aixi pel shim, vegeu _serialize_opts)
+        const photoId = v && v.__photoimage__;
+        const dataUrl = photoId != null ? tkImages.get(photoId) : null;
+        textTarget.innerHTML = '';
+        if (dataUrl) {
+          const img = document.createElement('img');
+          img.src = dataUrl;
+          img.style.maxWidth = '100%';
+          img.style.display = 'block';
+          textTarget.appendChild(img);
+        }
+      }
+    }
+  }
+
+  function tkWindowHeaderTitle(text) {
+    const h2 = document.querySelector('#tkCol .tk-window-header h2');
+    if (h2) h2.textContent = 'Finestra Tk — ' + text;
+  }
+
+  function tkCreate({ id, type, master, opts }) {
+    let el;
+    const parent = master != null ? tkNodes.get(master) : tkWindowEl;
+    if (type === 'Tk') {
+      el = tkWindowEl;
+      el.innerHTML = '';
+      mostraFinestraTk();
+    } else if (type === 'Label') {
+      el = document.createElement('span');
+      el.className = 'tk-label';
+    } else if (type === 'Entry') {
+      el = document.createElement('input');
+      el.type = 'text';
+      el.className = 'tk-entry';
+    } else if (type === 'Button') {
+      el = document.createElement('button');
+      el.className = 'tk-button';
+      el.addEventListener('click', () => tkFireEvent({ type: 'command', id }));
+    } else if (type === 'Frame') {
+      el = document.createElement('div');
+      el.className = 'tk-frame';
+    } else if (type === 'Radiobutton') {
+      el = document.createElement('label');
+      el.className = 'tk-radio';
+      const input = document.createElement('input');
+      input.type = 'radio';
+      const span = document.createElement('span');
+      el._tkTextTarget = span;   // tkApplyOpts ha d'escriure el text aqui, no a el.textContent
+      el.appendChild(input);
+      el.appendChild(span);
+
+      const varId = (opts || {})._variable;
+      const ownValue = (opts || {})._value;
+      if (varId != null) {
+        input.name = 'tkvar-' + varId;
+        if (!tkVars.has(varId)) tkVars.set(varId, { value: undefined, radios: [] });
+        const group = tkVars.get(varId);
+        group.radios.push({ id, el: input, value: ownValue });
+        if (group.value === ownValue) input.checked = true;
+        input.addEventListener('change', () => {
+          group.value = ownValue;
+          tkFireEvent({ type: 'command', id });
+        });
+      } else {
+        input.name = 'tkvar-solo-' + id; // sense variable: cap exclusivitat amb d'altres
+      }
+    } else if (type === 'Listbox') {
+      el = document.createElement('select');
+      el.className = 'tk-listbox';
+      el.size = 1; // es recalcula a cada insert/delete segons el nombre d'opcions
+    } else if (type === 'Checkbutton') {
+      el = document.createElement('label');
+      el.className = 'tk-check';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      const span = document.createElement('span');
+      el._tkTextTarget = span;
+      el.appendChild(input);
+      el.appendChild(span);
+
+      const varId  = (opts || {})._variable;
+      const onVal  = (opts || {})._onvalue;
+      const offVal = (opts || {})._offvalue;
+      if (varId != null) {
+        if (!tkVars.has(varId)) tkVars.set(varId, { value: offVal, radios: [] });
+        const group = tkVars.get(varId);
+        // Reutilitzem el mateix mecanisme que el Radiobutton: var_set() cerca
+        // dins "radios" l'element amb value===nouValor i el marca checked.
+        // Per a un checkbox nomes hi ha una entrada (value=onVal), aixi que
+        // "checked" coincideix exactament amb "la variable val onVal".
+        group.radios.push({ id, el: input, value: onVal });
+        input.checked = (group.value === onVal);
+        input.addEventListener('change', () => {
+          group.value = input.checked ? onVal : offVal;
+          tkFireEvent({ type: 'command', id });
+        });
+      }
+    } else {
+      el = document.createElement('div');
+    }
+    tkApplyOpts(el, opts || {});
+    tkNodes.set(id, el);
+    if (type !== 'Tk' && parent) parent.appendChild(el);
+    respondTk({ id });
+  }
+
+  function tkConfig({ id, opts }) {
+    tkApplyOpts(tkNodes.get(id), opts);
+    respondTk({ ok: true });
+  }
+
+  function tkCget({ id, key }) {
+    const el = tkNodes.get(id);
+    respondTk({ value: el ? el[key] : undefined });
+  }
+
+  function tkLayout({ id, manager, opts }) {
+    const el = tkNodes.get(id);
+    if (!el) { respondTk({ ok: false }); return; }
+    if (manager === 'pack') {
+      // El contenidor (.tk-window / .tk-frame) ja es flex column + centrat,
+      // que es el comportament per defecte real de pack(). side=left/right
+      // no crea una fila horitzontal real (limitacio coneguda d'aquest v0)
+      // pero almenys desplaca el giny cap a la vora corresponent en lloc
+      // de centrar-lo, que s'acosta a la intencio visual habitual
+      // ("boto sortir a la dreta").
+      if (opts.side === 'left') el.style.alignSelf = 'flex-start';
+      else if (opts.side === 'right') el.style.alignSelf = 'flex-end';
+      if (opts.padx) el.style.marginLeft = el.style.marginRight = opts.padx + 'px';
+      if (opts.pady) el.style.marginTop = el.style.marginBottom = opts.pady + 'px';
+    } else if (manager === 'place') {
+      el.style.position = 'absolute';
+      if (opts.x != null) el.style.left = opts.x + 'px';
+      if (opts.y != null) el.style.top = opts.y + 'px';
+      if (opts.width != null) el.style.width = opts.width + 'px';
+    } else if (manager === 'grid') {
+      // El contenidor (master) passa a CSS Grid; gracies a l'auto-placement
+      // del navegador no cal calcular nosaltres quantes files/columnes hi
+      // ha — nomes cal indicar a quina cel·la va cada giny (1-indexat en
+      // CSS, per aixo +1) i el navegador crea les files/columnes implicites
+      // que calguin, mida segons contingut (com tkinter real).
+      const parent = el.parentElement;
+      if (parent) {
+        parent.style.display = 'grid';
+        parent.style.justifyContent = 'safe center'; // "safe": centra si hi cap, si no cau a l'inici enlloc d'atrapar l'scroll (vegeu nota a .tk-window)
+        // Sense aixo, les files implicites (auto) s'estiren per omplir tota
+        // l'alçada del contenidor — "align-content: normal" es comporta com
+        // "stretch" en una graella. Les volem arrambades amunt, mida segons
+        // contingut, com fa tkinter real.
+        parent.style.alignContent = 'start';
+      }
+      const col     = opts.column     ?? 0;
+      const row     = opts.row        ?? 0;
+      const colspan = opts.columnspan ?? 1;
+      const rowspan = opts.rowspan    ?? 1;
+      el.style.gridColumn = colspan > 1 ? `${col + 1} / span ${colspan}` : String(col + 1);
+      el.style.gridRow    = rowspan > 1 ? `${row + 1} / span ${rowspan}` : String(row + 1);
+
+      const sticky = String(opts.sticky || '').toLowerCase();
+      if (sticky.includes('w') && sticky.includes('e')) el.style.justifySelf = 'stretch';
+      else if (sticky.includes('w')) el.style.justifySelf = 'start';
+      else if (sticky.includes('e')) el.style.justifySelf = 'end';
+      else el.style.justifySelf = 'center'; // per defecte, tkinter centra el giny dins la cel·la
+
+      if (sticky.includes('n') && sticky.includes('s')) el.style.alignSelf = 'stretch';
+      else if (sticky.includes('n')) el.style.alignSelf = 'start';
+      else if (sticky.includes('s')) el.style.alignSelf = 'end';
+      else el.style.alignSelf = 'center';
+
+      if (opts.padx) el.style.marginLeft = el.style.marginRight = opts.padx + 'px';
+      if (opts.pady) el.style.marginTop = el.style.marginBottom = opts.pady + 'px';
+    }
+    respondTk({ ok: true });
+  }
+
+  function tkGetEntry({ id }) {
+    const el = tkNodes.get(id);
+    respondTk({ value: el ? el.value : '' });
+  }
+
+  function tkInsertEntry({ id, index, text }) {
+    const el = tkNodes.get(id);
+    if (el) el.value = el.value.slice(0, index) + text + el.value.slice(index);
+    respondTk({ ok: true });
+  }
+
+  function tkDeleteEntry({ id, first, last }) {
+    const el = tkNodes.get(id);
+    if (el) el.value = (last == null) ? '' : el.value.slice(0, first) + el.value.slice(last);
+    respondTk({ ok: true });
+  }
+
+  function tkDestroy({ id }) {
+    const el = tkNodes.get(id);
+    if (el && id !== 0) el.remove();
+    if (id === 0) tkFireEvent({ type: 'quit' });
+    respondTk({ ok: true });
+  }
+
+  // Index per a insert(): 'end' vol dir "afegir al final" (longitud actual)
+  function tkListboxInsertIndex(el, idx) {
+    return idx === 'end' ? el.options.length : Number(idx);
+  }
+  // Index per a delete()/get(): 'end' es refereix a l'ULTIM element existent
+  function tkListboxRefIndex(el, idx) {
+    return idx === 'end' ? el.options.length - 1 : Number(idx);
+  }
+
+  function tkListboxInsert({ id, index, elements }) {
+    const el = tkNodes.get(id);
+    if (!el) return respondTk({ ok: false });
+    let at = tkListboxInsertIndex(el, index);
+    for (const text of elements) {
+      const opt = document.createElement('option');
+      opt.textContent = text;
+      if (at >= el.options.length) el.appendChild(opt);
+      else el.insertBefore(opt, el.options[at]);
+      at++;
+    }
+    el.size = Math.max(1, Math.min(el.options.length, 8));
+    respondTk({ ok: true });
+  }
+
+  function tkListboxDelete({ id, first, last }) {
+    const el = tkNodes.get(id);
+    if (!el) return respondTk({ ok: false });
+    const f = tkListboxRefIndex(el, first);
+    const l = (last == null) ? f : tkListboxRefIndex(el, last);
+    for (let i = Math.min(l, el.options.length - 1); i >= f; i--) {
+      if (el.options[i]) el.remove(i);
+    }
+    el.size = Math.max(1, Math.min(el.options.length, 8));
+    respondTk({ ok: true });
+  }
+
+  function tkListboxGetOne({ id, index }) {
+    const el = tkNodes.get(id);
+    if (!el) return respondTk({ value: '' });
+    const opt = el.options[tkListboxRefIndex(el, index)];
+    respondTk({ value: opt ? opt.textContent : '' });
+  }
+
+  function tkListboxGetRange({ id, first, last }) {
+    const el = tkNodes.get(id);
+    if (!el) return respondTk({ values: [] });
+    const f = tkListboxRefIndex(el, first);
+    const l = tkListboxRefIndex(el, last);
+    const values = [];
+    for (let i = f; i <= l && i < el.options.length; i++) values.push(el.options[i].textContent);
+    respondTk({ values });
+  }
+
+  function tkListboxCurselection({ id }) {
+    const el = tkNodes.get(id);
+    if (!el || el.selectedIndex < 0) return respondTk({ indices: [] });
+    respondTk({ indices: [el.selectedIndex] });
+  }
+
+  function tkListboxSize({ id }) {
+    const el = tkNodes.get(id);
+    respondTk({ value: el ? el.options.length : 0 });
+  }
+
+  function tkImageRegister({ id, data }) {
+    tkImages.set(id, data ? ('data:image/png;base64,' + data) : null);
+    respondTk({ ok: true });
+  }
+
+  function tkImageInfo({ id }) {
+    // v0: no mesurem amplada/alçada real (caldria decodificar la imatge de
+    // forma asincrona, incompatible amb el pont sincron). Vegeu LIMITACIONS.
+    respondTk({ width: 0, height: 0 });
+  }
+
+  function tkMsgbox({ kind, title, message }) {
+    // v0: dialegs natius del navegador. Bloquegen el fil principal un instant
+    // (no el worker), acceptable mentre no es construeixi un <dialog> propi.
+    if (kind === 'askokcancel') {
+      const ok = window.confirm((title ? title + '\n\n' : '') + message);
+      respondTk({ ok });
+    } else {
+      window.alert((title ? title + '\n\n' : '') + message);
+      respondTk({ ok: true });
+    }
+  }
+
+  function tkVarCreate({ id, value }) {
+    tkVars.set(id, { value, radios: [] });
+    respondTk({ ok: true });
+  }
+
+  function tkVarGet({ id }) {
+    const v = tkVars.get(id);
+    respondTk({ value: v ? v.value : null });
+  }
+
+  function tkVarSet({ id, value }) {
+    const v = tkVars.get(id);
+    if (v) {
+      v.value = value;
+      for (const r of v.radios) r.el.checked = (r.value === value);
+    }
+    respondTk({ ok: true });
+  }
+
+  function tkWaitEvent() {
+    // No respon ara: queda pendent fins que tkFireEvent el desperti
+    // (clic en un Button, o destroy() de la finestra arrel).
+    tkPendingEvent = (eventObj) => respondTk(eventObj);
+  }
+
+  function tkHandleOp(op, payload) {
+    switch (op) {
+      case 'create':     return tkCreate(payload);
+      case 'config':      return tkConfig(payload);
+      case 'cget':         return tkCget(payload);
+      case 'layout':         return tkLayout(payload);
+      case 'get':            return tkGetEntry(payload);
+      case 'insert':          return tkInsertEntry(payload);
+      case 'delete':            return tkDeleteEntry(payload);
+      case 'destroy':            return tkDestroy(payload);
+      case 'msgbox':               return tkMsgbox(payload);
+      case 'var_create':            return tkVarCreate(payload);
+      case 'var_get':                 return tkVarGet(payload);
+      case 'var_set':                  return tkVarSet(payload);
+      case 'listbox_insert':             return tkListboxInsert(payload);
+      case 'listbox_delete':              return tkListboxDelete(payload);
+      case 'listbox_get_one':              return tkListboxGetOne(payload);
+      case 'listbox_get_range':             return tkListboxGetRange(payload);
+      case 'listbox_curselection':           return tkListboxCurselection(payload);
+      case 'listbox_size':                    return tkListboxSize(payload);
+      case 'image_register':                   return tkImageRegister(payload);
+      case 'image_info':                        return tkImageInfo(payload);
+      case 'wait_event':                         return tkWaitEvent();
+      default:                       respondTk({ error: 'op desconeguda: ' + op });
+    }
+  }
+
+  tkCloseBtn.addEventListener('click', netejaFinestraTk);
+
+  // ── Worker ────────────────────────────────────────────────────────────
+  // El codi del worker viu a assets/worker.js. Es llegeix com a text i es
+  // converteix en Blob URL (en lloc de "new Worker('assets/worker.js')")
+  // perque cal poder-hi passar dades ja resoltes (pyodideBase, etc.) via
+  // postMessage sense dependre de com el worker resolgui rutes relatives.
+  const workerSrc   = await fetch(new URL('assets/worker.js', window.location.href).href).then((r) => r.text());
+  const blob        = new Blob([workerSrc], { type: 'text/javascript' });
+  const blobURL     = URL.createObjectURL(blob);
+  const pyodideBase = new URL('vendor/pyodide/0.28.3/', window.location.href).href;
+  // URLs absolutes dels fitxers vendor de MQTT (el worker, creat des d'un
+  // Blob, no resol camins relatius — igual que amb pyodideBase).
+  const mqttUrl = new URL('vendor/mqtt/5.15.1/mqtt.min.js', window.location.href).href;
+  const pahoUrl = new URL('vendor/paho/1.0/paho-mqtt.js', window.location.href).href;
+
+  function creaWorker() {
+    const w = new Worker(blobURL);
+    w.onmessage = gestionaMissatge;
+    w.postMessage({
+      type: 'init',
+      pyodideBase,
+      sharedBuffer: sharedBuf,
+      tkSharedBuffer: tkSharedBuf,
+      tkinterShimSource,
+      mqttUrl,
+      pahoUrl,
+      pahoShimSource,
+      fsShimSource,
+      httpShimSource,
+    });
+    return w;
+  }
+
+  function gestionaMissatge(event) {
+    const msg = event.data;
+    if (msg.type === 'ready') {
+      statusDot.classList.remove('busy');
+      statusDot.classList.add('ready');
+      statusText.textContent = 'Python llest';
+      runBtn.disabled = false;
+      interruptBtn.disabled = true;
+      intentaAutoRun();
+    } else if (msg.type === 'busy') {
+      statusDot.classList.remove('ready');
+      statusDot.classList.add('busy');
+      statusText.textContent = 'Executant ' + files[activeIdx].name + '…';
+      runBtn.disabled = true;
+      interruptBtn.disabled = false;
+    } else if (msg.type === 'done') {
+      statusDot.classList.remove('busy');
+      statusDot.classList.add('ready');
+      statusText.textContent = 'Llest';
+      runBtn.disabled = false;
+      interruptBtn.disabled = true;
+      pendingInputEl = null;
+    } else if (msg.type === 'stdout') {
+      logLine(msg.text, 'stdout');
+    } else if (msg.type === 'stderr') {
+      logLine(msg.text, 'stderr');
+    } else if (msg.type === 'status') {
+      statusText.textContent = msg.text;
+    } else if (msg.type === 'requestInput') {
+      pendingInputEl = mostraInputPrompt(msg.prompt);
+    } else if (msg.type === 'image') {
+      // Mostra la imatge PNG enviada per matplotlib.show() dins la consola
+      const img = document.createElement('img');
+      img.src = 'data:image/png;base64,' + msg.data;
+      img.style.cssText = 'max-width:100%;margin-top:6px;border-radius:4px;display:block;';
+      consoleOut.appendChild(img);
+      consoleOut.scrollTop = consoleOut.scrollHeight;
+      copyBtn.disabled = false;
+    } else if (msg.type === 'tkCall') {
+      const payload = JSON.parse(msg.payload || '{}');
+      tkHandleOp(msg.op, payload);
+    } else if (msg.type === 'fileChanged') {
+      gestionaFileChanged(msg.name, msg.content, msg.isText, msg.size);
+    }
+  }
+
+  let worker = creaWorker();
+
+  // ── Botó Executa ──────────────────────────────────────────────────────
+  runBtn.addEventListener('click', () => {
+    if (activeIsData) sincronitzaTextareaActiu();
+    else files[activeIdx].content = editor.state.doc.toString();
+    consoleOut.innerHTML = '';
+    copyBtn.disabled = true;
+    netejaFinestraTk();
+    logLine('--- executant ' + files[activeIdx].name + ' ---', 'status');
+
+    const moduleNames = files.map(f => f.name.replace(/\.py$/, ''));
+    worker.postMessage({
+      type: 'run',
+      files: files.map(f => ({ path: '/' + f.name, content: f.content })),
+      moduleNames,
+      code: files[activeIdx].content,
+      assets: assets.map(a => ({ name: a.name, b64: a.b64 })),
+      // TOTS els fitxers de dades (visibles i de pestanya tancada-però-no-
+      // eliminada), perquè el codi els trobi tal com els va deixar --
+      // vegeu contextFitxersPyBinefaCat.md.
+      dataFiles: dataFiles.map(df => ({ name: df.name, content: df.content, isText: df.isText, size: df.size })),
+      vars: urlVars,
+    });
+  });
+
+  // ── Botó Interromp ────────────────────────────────────────────────────
+  interruptBtn.addEventListener('click', () => {
+    worker.terminate();
+    // Neteja el camp d'entrada pendent si el worker s'ha aturat esperant input
+    if (pendingInputEl) {
+      pendingInputEl.disabled = true;
+      pendingInputEl = null;
+    }
+    netejaFinestraTk();
+    interruptBtn.disabled = true;
+    runBtn.disabled = true;
+    statusDot.classList.remove('ready', 'busy');
+    statusText.textContent = 'S\'està reiniciant l\'entorn…';
+    logLine('--- execució interrompuda, reiniciant entorn… ---', 'status');
+    worker = creaWorker();
+  });
+
+  // ── Botó Neteja ───────────────────────────────────────────────────────
+  clearBtn.addEventListener('click', () => {
+    consoleOut.innerHTML = '';
+    copyBtn.disabled = true;
+  });
+
+  // ── Botó Copia ────────────────────────────────────────────────────────
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(consoleOut.textContent).then(() => {
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'Copiat!';
+      setTimeout(() => { copyBtn.textContent = original; }, 1500);
+    });
+  });
+
+  // ── Renderitza les pestanyes inicials ─────────────────────────────────
+  renderTabs();
+
+  // ── Aplica #run:/#open: de la URL (si n'hi ha) ──────────────────────
+  function intentaAutoRun() {
+    if (!autoRunPendent) return;
+    if (runBtn.disabled) return; // el worker encara no ha enviat 'ready'
+    autoRunPendent = false;
+    runBtn.click();
+  }
+
+  async function aplicaDirectivaHash() {
+    const directiva = parseHashDirective();
+    if (!directiva) return;
+
+    let projecteCarregat = false;
+    if (directiva.prj) {
+      let ok;
+      if (directiva.prj.tipus === 'zip') {
+        ok = await carregaProjecteRemot(directiva.prj.valor);
+      } else if (directiva.prj.tipus === 'ex') {
+        ok = await carregaExempleDesDeHash(directiva.prj.valor);
+      } else {
+        ok = false; // format de _prj desconegut (ja avisat a parseHashDirective)
+      }
+      if (!ok) return; // l'error ja s'ha notificat dins de la funció corresponent
+      projecteCarregat = true;
+    }
+    // Sense _prj: no es carrega cap projecte nou, es fa servir el que ja hi
+    // hagi obert a l'IDE (el per defecte, o el que hagi quedat de la sessio
+    // anterior a localStorage) i nomes s'apliquen les variables.
+
+    urlVars = directiva.vars || {};
+
+    if (projecteCarregat) {
+      nomProjecteEl.textContent = nomProjecte;
+      actualitzaTitol();
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: files[0].content } });
+      renderTabs();
+      renderAssets();
+    }
+
+    if (directiva.mode === 'run') {
+      autoRunPendent = true;
+      pendentAutoMaximitzarTk = true;   // com Snap!: #run: maximitza si surt una finestra Tk, #open: no
+      intentaAutoRun();
+    }
+  }
+  aplicaDirectivaHash();
+})();
+</script>
+
+<div class="fs-modal-overlay" id="fsModalOverlay" style="display:none">
+  <div class="fs-modal">
+    <p id="fsModalText">Tancar aquest fitxer de dades?</p>
+    <div class="fs-modal-botons">
+      <button type="button" id="fsModalElimina" class="danger sm">Elimina l'arxiu</button>
+      <button type="button" id="fsModalNomesTanca" class="secondary sm">Només tanca la pestanya</button>
+      <button type="button" id="fsModalCancela" class="sm">Cancel·la</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

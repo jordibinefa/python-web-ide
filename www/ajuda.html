@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ajuda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ecf0f1;
+            padding: 40px;
+            line-height: 1.6;
+        }
+        
+        .content-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Estils per taules */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            border: 2px solid #34495e;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #2980b9;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #ecf0f1;
+        }
+        
+        /* Estils per codi */
+        code {
+            background-color: #ecf0f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        
+        pre {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            line-height: 1.4;
+        }
+        
+        pre code {
+            background-color: transparent;
+            color: #ecf0f1;
+            padding: 0;
+        }
+        
+        /* Estils per capçaleres */
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            font-size: 2em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        h3 {
+            font-size: 1.5em;
+            color: #3498db;
+        }
+        
+        /* Altres elements */
+        p {
+            margin: 10px 0;
+        }
+        
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin: 20px 0;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        ul, ol {
+            margin: 10px 0 10px 30px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #bdc3c7;
+            margin: 30px 0;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        /* Estils per botons de còpia (si estan inclosos) */
+        .code-block-wrapper {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .copy-code-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+        
+        .copy-code-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .copy-code-btn.copied {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <h1 style="font-size: 2em; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">Ajuda — py.binefa.cat (IDE Python al navegador)</h1>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquest document explica com carregar projectes i passar valors des de la URL<br>(<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:</code> / <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:</code>), i quines restriccions té l'entorn respecte a un Python<br>normal — sobretot pel que fa a <strong style="font-weight: bold; color: #2c3e50; ">MQTT</strong> i <strong style="font-weight: bold; color: #2c3e50; ">tkinter</strong>.</p>
+<blockquote style="border-left: 4px solid #3498db; padding-left: 15px; margin-left: 0; color: #555; font-style: italic; margin: 1em 0; ">
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquest fitxer és l'esborrany en Markdown. Es convertirà a <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">ajuda.html</code><br>quan estigui validat.</p>
+</blockquote>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">1. Què és <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:</code> i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:</code>?</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Just després de la URL de l'IDE pots afegir un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:...</code> o un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:...</code><br>per carregar (i, amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:</code>, executar automàticament) un projecte i<br>opcionalment passar-li variables.</p>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:...</code></strong> — carrega el projecte a l'IDE però <strong style="font-weight: bold; color: #2c3e50; ">no l'executa</strong>.<br>L'alumne prem "Executa" quan vulgui.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:...</code></strong> — carrega el projecte i l'<strong style="font-weight: bold; color: #2c3e50; ">executa automàticament</strong> en<br>quant l'entorn Python estigui llest.</li>
+</ul>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Exemples:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">https://py.binefa.cat/#open:https://dt.iotvertebrae.com/prjs/exemple.zip
+https://py.binefa.cat/#run:https://dt.iotvertebrae.com/prjs/exemple.zip
+</code></pre><button class="copy-code-btn" data-code-index="0">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">En aquest cas simple (una URL sola, sense cap <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">=</code>), tot el que hi ha<br>després de <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:</code> es tracta directament com la URL d'un fitxer<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">.zip</code> amb el projecte.</p>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">2. Passar variables i triar el projecte alhora</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Si necessites passar <strong style="font-weight: bold; color: #2c3e50; ">variables</strong> (per exemple un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic</code> de MQTT diferent<br>per a cada alumne) fas servir parells <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">clau=valor</code> separats per <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&amp;</code>:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:_prj=zip:&lt;url-del-zip&gt;&amp;topic=alumne07-a3f9c2&amp;sid=binefaJordi
+</code></pre><button class="copy-code-btn" data-code-index="1">📋</button></div>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">_prj</code></strong> és l'única clau reservada pel sistema. Indica d'on ve el<br>projecte:<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">_prj=zip:&lt;url&gt;</code> — descarrega i carrega un ZIP (equivalent a "Importa<br>ZIP…").</li>
+<li style="margin: 0.5em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">_prj=ex:&lt;id&gt;</code> — carrega un dels exemples predefinits del desplegable<br>(pel seu identificador intern, no pel nom que es veu al menú).</li>
+</ul>
+</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">Qualsevol altra clau</strong> (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">sid</code>, o el nom que vulguis) és una<br><strong style="font-weight: bold; color: #2c3e50; ">variable lliure</strong> que es passa al teu codi Python.</li>
+</ul>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Si no poses <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">_prj</code>, no es carrega cap projecte nou: només s'apliquen les<br>variables sobre el que ja hi hagi obert a l'IDE (el projecte per defecte, o<br>el que hagi quedat desat de la sessió anterior). És útil quan el professor<br>o l'alumne ja té el codi carregat i només vol canviar el valor d'una<br>variable (per exemple, en una demo en directe canviant <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic</code> cada<br>vegada):</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">https://py.binefa.cat/#open:topic=alumne07-a3f9c2&amp;sid=binefaJordi
+https://py.binefa.cat/#run:topic=alumne07-a3f9c2&amp;sid=binefaJordi
+</code></pre><button class="copy-code-btn" data-code-index="2">📋</button></div>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; ">Amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:</code> només es defineixen les variables; l'alumne prem "Executa"<br>quan vulgui.</li>
+<li style="margin: 0.5em 0; ">Amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:</code> es defineixen les variables <strong style="font-weight: bold; color: #2c3e50; ">i</strong> s'executa immediatament el<br>projecte que ja hi havia obert.</li>
+</ul>
+<blockquote style="border-left: 4px solid #3498db; padding-left: 15px; margin-left: 0; color: #555; font-style: italic; margin: 1em 0; ">
+<p style="margin: 0.5em 0; line-height: 1.6; ">⚠️ <strong style="font-weight: bold; color: #2c3e50; ">Important</strong>: si ja tens la pàgina oberta i només canvies el hash de<br>la URL (per exemple, el valor de <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic</code>), <strong style="font-weight: bold; color: #2c3e50; ">cal recarregar la pàgina<br>sencera</strong> perquè el nou valor s'apliqui — vegeu l'avís a la secció<br>següent.</p>
+</blockquote>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">Identificadors dels exemples predefinits (per a <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">_prj=ex:</code>)</h3>
+<table style="border-collapse: collapse; width: 100%; margin: 1em 0; ">
+<thead>
+<tr>
+<th style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; background-color: #3498db; color: white; font-weight: bold; ">Categoria</th>
+<th style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; background-color: #3498db; color: white; font-weight: bold; ">Identificador</th>
+<th style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; background-color: #3498db; color: white; font-weight: bold; ">Exemple</th>
+</tr>
+</thead>
+<tbody><tr>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Bàsic</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">basic_condicionals</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Condicionals (if / elif / else)</td>
+</tr>
+<tr style="background-color: rgb(249, 249, 249);">
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Bàsic</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">basic_bucles</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Bucles (while / for)</td>
+</tr>
+<tr>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Bàsic</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">basic_tryexcept</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Gestió d'excepcions</td>
+</tr>
+<tr style="background-color: rgb(249, 249, 249);">
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Bàsic</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">basic_multifitxer</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Projecte amb diversos fitxers</td>
+</tr>
+<tr>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Científic</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">cientific_numpy</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">NumPy</td>
+</tr>
+<tr style="background-color: rgb(249, 249, 249);">
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Científic</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">cientific_matplotlib</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Matplotlib</td>
+</tr>
+<tr>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">TKinter</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tk_basic</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Finestra bàsica</td>
+</tr>
+<tr style="background-color: rgb(249, 249, 249);">
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">TKinter</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tk_checkbutton</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Checkbutton</td>
+</tr>
+<tr>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">TKinter</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tk_grid</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Grid (columnspan/rowspan/sticky)</td>
+</tr>
+<tr style="background-color: rgb(249, 249, 249);">
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">TKinter</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tk_listbox</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Listbox</td>
+</tr>
+<tr>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">TKinter</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tk_place</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Place</td>
+</tr>
+<tr style="background-color: rgb(249, 249, 249);">
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">TKinter</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tk_radiobutton</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Radiobutton</td>
+</tr>
+<tr>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">TKinter</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tk_image</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">PhotoImage</td>
+</tr>
+<tr style="background-color: rgb(249, 249, 249);">
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">MQTT</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mqtt_publica</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Només publicador</td>
+</tr>
+<tr>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">MQTT</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mqtt_subscriu</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Només subscriptor</td>
+</tr>
+<tr style="background-color: rgb(249, 249, 249);">
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">MQTT</td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mqtt_pub_sub</code></td>
+<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; ">Publicador + subscriptor alhora</td>
+</tr>
+</tbody></table>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Exemple complet carregant l'exemple <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mqtt_pub_sub</code> i passant-li un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic</code><br>propi:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">https://py.binefa.cat/#run:_prj=ex:mqtt_pub_sub&amp;topic=alumne07-a3f9c2
+</code></pre><button class="copy-code-btn" data-code-index="3">📋</button></div>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">3. Com llegir aquestes variables des del teu codi Python</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Les variables arriben com a <strong style="font-weight: bold; color: #2c3e50; ">variables globals normals</strong>, sempre de tipus<br><strong style="font-weight: bold; color: #2c3e50; ">text (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">str</code>)</strong> — mai número, mai booleà. Si necessites un número, has de<br>convertir-lo tu mateix amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">int(...)</code> o <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">float(...)</code>.</p>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Com que una variable només existeix si algú l'ha passat per la URL, cal<br>comprovar-ho abans d'utilitzar-la:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">if 'topic' in globals():
+    arrel = topic
+else:
+    arrel = "arrel_per_defecte"
+
+print("Fent servir l'arrel de topic:", arrel)
+</code></pre><button class="copy-code-btn" data-code-index="4">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquest patró (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">'nom' in globals()</code>) et permet escriure un mateix programa<br>que funcioni tant si s'obre "a pèl" (sense variables) com si es llança amb<br>una URL personalitzada per a cada alumne.</p>
+<p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Nota:</strong> un cop el projecte ja s'ha carregat, si tornes a prémer "Executa"<br>manualment <strong style="font-weight: bold; color: #2c3e50; ">sense tocar la URL</strong>, les mateixes variables es tornen a<br>injectar automàticament (no cal fer res més). Ara bé, si el que vols és<br><strong style="font-weight: bold; color: #2c3e50; ">canviar el valor</strong> d'una variable (o carregar un altre projecte), cal<br>editar el hash de la URL i <strong style="font-weight: bold; color: #2c3e50; ">recarregar la pàgina sencera</strong> — vegeu<br>l'avís de la propera secció.</p>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">4. Cal recarregar la pàgina quan canvies la URL</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">El hash de la URL (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:...</code> / <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:...</code>) <strong style="font-weight: bold; color: #2c3e50; ">només es llegeix un cop, en<br>carregar la pàgina</strong>. Si ja tens <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">py.binefa.cat</code> obert i simplement canvies<br>el valor d'una variable, o l'exemple, a la barra d'adreces, <strong style="font-weight: bold; color: #2c3e50; ">el canvi no<br>s'aplicarà fins que la pàgina es torni a carregar sencera</strong>.</p>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">Editant la URL a mà</strong>: després de canviar el hash, prem <strong style="font-weight: bold; color: #2c3e50; ">Enter</strong> a la<br>barra d'adreces (sol fer una recàrrega completa) o força-ho amb <strong style="font-weight: bold; color: #2c3e50; ">F5</strong> /<br><strong style="font-weight: bold; color: #2c3e50; ">Ctrl+R</strong> (Windows/Linux) o <strong style="font-weight: bold; color: #2c3e50; ">Cmd+R</strong> (Mac) per estar-ne segur.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">Amb pestanyes obertes prèviament</strong>: si ja tenies la pestanya oberta<br>d'una sessió anterior i enganxes una URL nova amb un hash diferent, més<br>val obrir-la en una pestanya nova o recarregar-la explícitament — alguns<br>navegadors no recarreguen automàticament si només canvia la part després<br>del <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#</code>.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">Dins d'un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&lt;iframe&gt;</code></strong> (per exemple, la pàgina amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">split</code> per generar<br>una arrel de topic diferent per a cada alumne): si el JavaScript de la<br>pàgina contenidora canvia només l'atribut <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">src</code> de l'<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">iframe</code> (mateixa<br>URL base, hash diferent), molts navegadors <strong style="font-weight: bold; color: #2c3e50; ">no recarreguen el document<br>intern de l'iframe</strong> — cal forçar-ho explícitament (per exemple, buidant<br>primer el <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">src</code> i tornant-lo a assignar, o creant l'<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">iframe</code> de nou) si<br>es vol canviar el <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic</code> d'un iframe ja carregat.</li>
+</ul>
+<p style="margin: 0.5em 0; line-height: 1.6; ">En resum: cada <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">sid</code> o altre valor nou que vulguis provar implica<br>una <strong style="font-weight: bold; color: #2c3e50; ">càrrega de pàgina nova des de zero</strong>, no una simple actualització en<br>calent.</p>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">5. Valors amb espais, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">/</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#</code>... (cometes)</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Si el valor d'una variable conté caràcters com espais, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">/</code> o <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#</code>, tens dues<br>opcions:</p>
+<ol style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Cometes, a l'estil Python</strong> (recomanat quan escrius la URL a mà, per<br>exemple en una demo en directe):</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:_prj=ex:mqtt_pub_sub&amp;topic='alumnes/grup A/demo'
+</code></pre><button class="copy-code-btn" data-code-index="5">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Igual que en Python, pots fer servir cometes simples o dobles, i l'una<br>pot contenir l'altra sense problemes:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic="Una 'prova' amb dobles"
+topic='Una "prova" amb simples'
+</code></pre><button class="copy-code-btn" data-code-index="6">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">L'única limitació és que <strong style="font-weight: bold; color: #2c3e50; ">no hi ha manera d'escapar la mateixa cometa<br>que ja fas servir per obrir/tancar el valor</strong>. Si el teu valor conté<br>alhora <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">'</code> i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">"</code>, tria l'altra tècnica (punt següent).</p>
+</li>
+<li style="margin: 0.5em 0; "><p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Codificat amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">encodeURIComponent</code></strong> (recomanat quan la URL la genera<br>una pàgina/script, per exemple la pàgina amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">split</code> per a 30 alumnes):<br>qualsevol valor sense cometa a l'inici es desxifra automàticament amb<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">decodeURIComponent()</code>.</p>
+</li>
+</ol>
+<p style="margin: 0.5em 0; line-height: 1.6; ">No cal escapar mai el caràcter <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#</code>: el navegador només interpreta el<br><em style="font-style: italic; ">primer</em> <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#</code> de la URL com a inici del "hash"; qualsevol <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#</code> posterior ja<br>forma part del valor tal qual. El <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">/</code> tampoc necessita cap tractament<br>especial. Els caràcters que <strong style="font-weight: bold; color: #2c3e50; ">sí</strong> cal vigilar són <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&amp;</code> i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">=</code> (fan servir de<br>separadors) i els espais — per aquests, cometes o <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">encodeURIComponent</code>.</p>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">6. D'on es poden carregar projectes ZIP remots (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">_prj=zip:</code>)</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Per seguretat, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">_prj=zip:&lt;url&gt;</code> només funciona si la URL pertany a un<br>d'aquests dominis (o a un subdomini seu):</p>
+<p style="margin: 0.5em 0; line-height: 1.6; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">berkeley.edu</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">fje.edu</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">binefa.com</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">binefa.cat</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">binefa.net</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">things.cat</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">electronics.cat</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">popotamo.cat</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">github.com</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">github.io</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">xavierpi.com</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">collados.org</code></p>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Si el domini no hi és, l'IDE mostra un avís i no carrega res.</p>
+<p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Important sobre CORS</strong>: encara que el domini estigui a la llista, el<br>servidor que allotja el ZIP ha de permetre l'accés des d'un altre lloc web<br>(capçalera <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Access-Control-Allow-Origin</code>). Si no ho fa, la càrrega falla<br>igualment — obre la consola del navegador (tecla F12) per veure el motiu<br>exacte de l'error.</p>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">7. Restriccions de MQTT al navegador</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">L'IDE inclou un shim de <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">paho.mqtt.client</code> que funciona <strong style="font-weight: bold; color: #2c3e50; ">dins del<br>navegador</strong>, però amb algunes diferències respecte a un Raspberry Pi o un<br>ordinador normal:</p>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Només <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">wss</code> (WebSocket segur), mai TCP cru.</strong> El navegador no pot obrir<br>connexions TCP directes; per això cal connectar-se a un port de broker<br>que accepti WebSocket (típicament 8084, 8081, 8000 o 9002).</p>
+</li>
+<li style="margin: 0.5em 0; "><p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">loop_forever()</code> no funciona.</strong> Al navegador tot passa en un únic fil<br>d'execució; <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">loop_forever()</code> el bloquejaria per complet i no es rebria<br>cap missatge. Fes servir sempre <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">loop_start()</code> i mantén el programa viu<br>amb un bucle asíncron (secció 9 si combines amb una finestra tkinter):</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">client.loop_start()
+while True:
+    await asyncio.sleep(1)
+</code></pre><button class="copy-code-btn" data-code-index="7">📋</button></div>
+</li>
+<li style="margin: 0.5em 0; "><p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Regla d'or: <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await asyncio.sleep(...)</code>, mai <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">time.sleep(...)</code>.</strong> Si fas<br>servir <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">time.sleep()</code> dins d'un bucle, el programa "es congela" i deixa<br>de rebre missatges MQTT durant tota l'espera. <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.sleep()</code> cedeix el<br>control i permet que arribin els missatges <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_message</code> mentre esperes.<br>Per això <strong style="font-weight: bold; color: #2c3e50; ">tot codi MQTT que hagi de rebre i esperar alhora ha de fer<br>servir <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code></strong> (directament al nivell superior del fitxer — vegeu la<br>secció 9 sobre per què NO cal, i de fet NO funciona, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">async def</code>/<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code> en aquest IDE), no funcions ni bucles síncrons normals.</p>
+</li>
+<li style="margin: 0.5em 0; "><p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">msg.payload</code> arriba com a <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">bytes</code></strong>, igual que amb el paho real —<br>recorda fer <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">msg.payload.decode("utf-8")</code> per obtenir-ne el text.</p>
+</li>
+<li style="margin: 0.5em 0; "><p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Subconjunt de l'API real de paho.</strong> Estan implementats:<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Client(client_id)</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_connect</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_disconnect</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_message</code>/<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_publish</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_subscribe</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_unsubscribe</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">username_pw_set()</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">user_data_set()</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">connect()</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">publish()</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">subscribe()</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">unsubscribe()</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">loop_start()</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">loop_stop()</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">disconnect()</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">is_connected()</code>. <strong style="font-weight: bold; color: #2c3e50; ">No hi ha</strong> <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tls_set()</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">will_set()</code>, ni reconnexió<br>automàtica configurable.</p>
+</li>
+<li style="margin: 0.5em 0; "><p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Col·lisió de topics entre companys.</strong> Si diversos alumnes fan servir el<br>mateix "arrel" de topic (per exemple <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">arrel/#</code>) contra el mateix broker<br>públic, es veuran els missatges els uns dels altres. Fes servir la<br>variable <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">topic</code> passada per URL (secció 2-3 d'aquest document) perquè<br>cada alumne tingui una arrel pròpia.</p>
+</li>
+</ul>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">8. Restriccions de tkinter al navegador</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">L'IDE inclou un shim de <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tkinter</code> que tradueix les crides a elements HTML<br>dins la pestanya "Finestra Tk" de l'IDE. Cobreix <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Tk</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Label</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Entry</code> (amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">show='*'</code> per a contrasenyes), <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Button</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">messagebox.showinfo</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">askokcancel</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Radiobutton</code> + <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">IntVar</code>/<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">StringVar</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Listbox</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Checkbutton</code> i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">PhotoImage</code>, amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">pack()</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">grid()</code> i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">place()</code>. Limitacions a tenir en compte:</p>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">No hi ha <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Canvas</code> ni <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Toplevel</code></strong> (cap finestra secundària; només la<br>finestra principal).</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">grid()</code> no admet <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">columnconfigure()</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">rowconfigure()</code></strong> (pesos de<br>redimensionament de files/columnes). Sí que funcionen <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">columnspan</code>,<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">rowspan</code> i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">sticky</code>.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">bind()</code> genèric no existeix.</strong> Només es capturen esdeveniments a<br>través de <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">command=</code> (per exemple, el clic d'un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Button</code>).</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">PhotoImage.width()</code> i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">.height()</code> sempre retornen <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">0</code>.</strong> Si el teu<br>codi necessita mesurar una imatge, no ho podràs fer amb el shim.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">Les imatges (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">PhotoImage(file=...)</code>) han de tenir ruta absoluta.</strong> Si<br>la importes com a asset del projecte, l'IDE ja se n'ocupa; si hi ha<br>problemes de càrrega, prova amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">/nom_imatge.png</code>.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">Els errors de tkinter no tenen un tractament especial</strong>: si el teu codi<br>llança una excepció (per exemple, un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">float()</code> d'una cadena buida),<br>sortirà per la consola igual que qualsevol altre error de Python.</li>
+</ul>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">9. Combinar tkinter amb MQTT (o qualsevol codi asíncron)</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquesta secció és clau si vols una finestra tkinter interactiva que alhora<br>rebi missatges MQTT (o faci qualsevol altra cosa en segon pla).</p>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">finestra.mainloop()</code> bloqueja MQTT — no la facis servir aquí</h3>
+<p style="margin: 0.5em 0; line-height: 1.6; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mainloop()</code> espera els clics de manera <strong style="font-weight: bold; color: #2c3e50; ">totalment bloquejant</strong>: mentre<br>està activa, el navegador no pot processar res més al mateix fil — ni tan<br>sols els missatges MQTT que arribin, encara que la connexió ja estigui<br>oberta. És a dir, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mainloop()</code> i MQTT en directe <strong style="font-weight: bold; color: #2c3e50; ">no poden conviure</strong>.</p>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">Solució: <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">finestra.update()</code> dins d'un bucle asíncron</h3>
+<p style="margin: 0.5em 0; line-height: 1.6; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">update()</code> és un mètode <strong style="font-weight: bold; color: #2c3e50; ">real</strong> de tkinter (no un invent d'aquest IDE):<br>processa els clics pendents i torna immediatament, sense bloquejar mai.<br>Substitueix <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mainloop()</code> per aquest patró:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">aturat = False
+while not aturat:
+    finestra.update()           # processa clics pendents, no bloqueja
+    await asyncio.sleep(0.05)   # cedeix el control perquè arribi MQTT
+</code></pre><button class="copy-code-btn" data-code-index="8">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquest patró és 100% vàlid també fora del navegador (Raspberry Pi, PC amb<br>tkinter real) — no és cap invent exclusiu de l'IDE.</p>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">⚠️ Mai facis servir <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code> en aquest IDE</h3>
+<p style="margin: 0.5em 0; line-height: 1.6; ">És temptador escriure el bucle anterior dins d'una funció i cridar-la amb<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run(main())</code>, tal com faries en un terminal normal. <strong style="font-weight: bold; color: #2c3e50; ">A<br>py.binefa.cat això falla</strong> amb:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">RuntimeError: WebAssembly stack switching not supported in this JavaScript runtime
+</code></pre><button class="copy-code-btn" data-code-index="9">📋</button></div>
+<blockquote style="border-left: 4px solid #3498db; padding-left: 15px; margin-left: 0; color: #555; font-style: italic; margin: 1em 0; ">
+<p style="margin: 0.5em 0; line-height: 1.6; ">💡 Això és cert si crides <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code> <strong style="font-weight: bold; color: #2c3e50; ">incondicionalment</strong>. Si vols<br>que el mateix fitxer també es pugui executar des d'un terminal normal amb<br>tkinter/paho-mqtt reals (per exemple per provar-lo abans de pujar-lo, o<br>perquè funcioni igual en un Raspberry Pi), a la <strong style="font-weight: bold; color: #2c3e50; ">secció 13</strong> hi ha el<br>patró per detectar en quin dels dos entorns ets i triar automàticament<br>entre <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code> (navegador) i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code> (terminal) sense mantenir dos<br>fitxers diferents.</p>
+</blockquote>
+<p style="margin: 0.5em 0; line-height: 1.6; ">L'IDE ja executa el teu codi dins el seu propi bucle asíncron, i permet fer<br>servir <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code> <strong style="font-weight: bold; color: #2c3e50; ">directament al nivell superior del fitxer</strong> (sense cap<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">async def</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code> al voltant). Fes-ho servir així:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; "># ✅ Correcte a l'IDE: 'await' directament, sense embolcall
+aturat = False
+while not aturat:
+    finestra.update()
+    await asyncio.sleep(0.05)
+</code></pre><button class="copy-code-btn" data-code-index="10">📋</button></div>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; "># ❌ Falla a l'IDE (encara que sigui Python vàlid en un terminal normal)
+async def main():
+    while not aturat:
+        finestra.update()
+        await asyncio.sleep(0.05)
+asyncio.run(main())
+</code></pre><button class="copy-code-btn" data-code-index="11">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; "><strong style="font-weight: bold; color: #2c3e50; ">Símptoma enganyós si t'equivoques</strong>: amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code>, el programa<br>sembla mig funcionar — una finestra tkinter connectada mostra "Connectat" i<br>fins i tot missatges rebuts (perquè els callbacks de MQTT es criden per un<br>altre camí, independent del bucle), però <strong style="font-weight: bold; color: #2c3e50; ">cap botó respon</strong> (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">update()</code><br>mai s'arriba a cridar). Si et trobes en aquesta situació, revisa que no hi<br>hagi cap <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code> al teu codi.</p>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">No barregis <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mainloop()</code> i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">update()</code> al mateix programa</h3>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Tria un dels dos patrons segons si necessites codi asíncron en paral·lel<br>(<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">update()</code>) o no (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mainloop()</code>, més simple per a tkinter "pur").</p>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">10. Altres restriccions generals de l'entorn</h2>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">Cada "Executa" reinicia l'estat de fitxers <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">.py</code></strong>: s'esborren tots els<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">.py</code> anteriors del sistema de fitxers virtual i es tornen a escriure els<br>del projecte actual. Els assets (imatges) i les variables de la URL es<br>mantenen entre execucions.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">No hi ha accés a Internet des del codi Python</strong>, més enllà de MQTT via<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">wss</code>. No es poden fer peticions HTTP arbitràries (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">requests</code>, <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">urllib</code>,<br>etc. no tenen accés a la xarxa real del navegador tal com ho tindrien en<br>un ordinador normal).</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">matplotlib.pyplot.show()</code></strong> està adaptat perquè, en lloc d'obrir una<br>finestra, enviï la imatge com a PNG a la consola de l'IDE.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">input()</code> funciona però és bloquejant</strong>: el programa espera que<br>l'alumne escrigui una resposta al quadre que apareix a la consola abans<br>de continuar.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">El projecte es desa automàticament al navegador (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">localStorage</code>)</strong> de<br>l'alumne mentre edita manualment. Els projectes carregats per <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#run:</code>/<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:</code> <strong style="font-weight: bold; color: #2c3e50; ">no es desen automàticament</strong>: si es recarrega la pàgina amb la<br>mateixa URL, es torna a carregar igual; si es canvia d'URL sense el hash,<br>es recupera l'últim projecte desat localment.</li>
+</ul>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">11. Incrustar py.binefa.cat dins d'una pàgina pròpia (avançat)</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquesta secció només interessa si vols fer una pàgina teva que mostri<br>py.binefa.cat dins d'un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&lt;iframe&gt;</code> (per exemple, un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">split</code> amb Snap! a<br>l'altra meitat, com <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">pahoSnap00.html</code>). Si només ets alumne fent servir<br>py.binefa.cat directament, te la pots saltar.</p>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Com que py.binefa.cat necessita <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">SharedArrayBuffer</code> per a tkinter, <strong style="font-weight: bold; color: #2c3e50; ">la<br>teva pròpia pàgina (la que conté l'<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&lt;iframe&gt;</code>) ha d'enviar aquestes dues<br>capçaleres HTTP</strong> (mai amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&lt;meta&gt;</code>, han de sortir del teu servidor):</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: credentialless
+</code></pre><button class="copy-code-btn" data-code-index="12">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">I l'etiqueta <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&lt;iframe&gt;</code> que incrusta py.binefa.cat necessita, a més:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-html" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&lt;iframe src="https://py.binefa.cat/#run:..." allow="cross-origin-isolated"&gt;&lt;/iframe&gt;
+</code></pre><button class="copy-code-btn" data-code-index="13">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Si la teva pàgina té aquestes capçaleres actives, <strong style="font-weight: bold; color: #2c3e50; ">qualsevol altre<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&lt;iframe&gt;</code> que hi posis al costat</strong> (Snap!, o el que sigui) també les<br>necessita ell mateix — si no, el navegador el bloqueja igual, encara que<br>no tingui res a veure amb tkinter ni <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">SharedArrayBuffer</code>:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Cross-Origin-Embedder-Policy: credentialless
+Cross-Origin-Resource-Policy: cross-origin
+</code></pre><button class="copy-code-btn" data-code-index="14">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquest darrer detall (calen les dues capçaleres al document incrustat, no<br>només una) és fàcil de passar per alt i dona errors que semblen no tenir<br>relació (missatges de "connexió no permesa" dins de l'<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">iframe</code>, tot i que<br>la mateixa URL funciona bé oberta directament). Si t'hi trobes, comença<br>sempre per <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">curl -sI &lt;url&gt;</code> per veure exactament quines capçaleres arriben,<br>abans de sospitar d'extensions del navegador o polítiques de xarxa.</p>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">12. Xuleta ràpida</h2>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">#open:&lt;url.zip&gt;                                  → carrega, no executa
+#run:&lt;url.zip&gt;                                   → carrega i executa
+#run:_prj=zip:&lt;url.zip&gt;&amp;clau=valor               → + variables
+#run:_prj=ex:&lt;id&gt;&amp;clau=valor                     → exemple predefinit + variables
+#run:_prj=ex:mqtt_pub_sub&amp;topic='alumnes/grup A' → valor amb espais, entre cometes
+#run:topic=alumne07-a3f9c2&amp;sid=binefaJordi       → nomes variables, sobre el projecte ja obert
+</code></pre><button class="copy-code-btn" data-code-index="15">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Des de Python:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">if 'topic' in globals():
+    print("topic rebut per URL:", topic)
+</code></pre><button class="copy-code-btn" data-code-index="16">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">MQTT: <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await asyncio.sleep(...)</code> (mai <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">async def</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code>, mai<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">time.sleep()</code>), i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">loop_start()</code> en lloc de <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">loop_forever()</code>.</p>
+<p style="margin: 0.5em 0; line-height: 1.6; ">tkinter + MQTT (o qualsevol asíncron): <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">finestra.update()</code> dins<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">while not aturat: ...; await asyncio.sleep(0.05)</code>, mai <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mainloop()</code>.</p>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Voleu que el mateix fitxer funcioni també des d'un terminal normal<br>(tkinter/paho-mqtt reals)? → secció 13.</p>
+<p style="margin: 0.5em 0; line-height: 1.6; ">⚠️ <strong style="font-weight: bold; color: #2c3e50; ">Cada cop que canviïs algun valor del hash de la URL, recarrega la<br>pàgina sencera</strong> (Enter a la barra d'adreces, F5, o una càrrega nova de<br>l'iframe) — el hash només es llegeix en carregar la pàgina.</p>
+<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 2em 0; ">
+<h2 style="font-size: 1.5em; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">13. Fer que el mateix codi funcioni des d'un terminal (avançat)</h2>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquesta secció és per quan vols que <strong style="font-weight: bold; color: #2c3e50; ">el mateix fitxer <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">.py</code></strong> funcioni tant<br>pujat a <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">py.binefa.cat</code> (tkinter/MQTT via shim, dins Pyodide) com executat<br>directament amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">python3 elteu_fitxer.py</code> en un ordinador normal (tkinter i<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">paho-mqtt</code> reals). És el cas, per exemple, si vols provar-lo còmodament en<br>local abans de pujar-lo, o fer-lo servir igual en un Raspberry Pi. Apareixen<br>quatre diferències a tenir en compte; totes es resolen detectant en quin<br>entorn ets <strong style="font-weight: bold; color: #2c3e50; ">un sol cop, al principi del fitxer</strong>:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">import asyncio
+
+try:
+    asyncio.get_running_loop()
+    _dins_navegador = True   # Pyodide ja té un event loop actiu
+except RuntimeError:
+    _dins_navegador = False  # script de terminal: encara no n'hi ha cap
+</code></pre><button class="copy-code-btn" data-code-index="17">📋</button></div>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">13.1. El bucle principal (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code> vs. <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code>)</h3>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Com ja explica la secció 9, el navegador exigeix <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code> a nivell superior<br>del fitxer i <strong style="font-weight: bold; color: #2c3e50; ">no admet</strong> <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code>. Un terminal normal és just al<br>revés: <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code> fora d'una funció <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">async</code> és un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">SyntaxError</code> en carregar el<br>fitxer (encara que mai s'arribés a executar), i <strong style="font-weight: bold; color: #2c3e50; ">cal</strong> <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code>.<br>Com que no es pot triar entre "codi amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code> solt" i "codi dins d'una<br>funció" en temps d'execució (Python decideix la validesa de l'<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code> quan<br>compila el fitxer, no quan el corre), la solució és: el bucle SEMPRE viu<br>dins d'una funció <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">async def</code>, i només es decideix com llançar-lo:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">async def bucle_principal():
+    aturat = False
+    while not aturat:
+        finestra.update()
+        await asyncio.sleep(0.05)
+
+if _dins_navegador:
+    # Ja hi ha un event loop en marxa (per això funciona 'await' solt);
+    # programem el bucle com a tasca perquè continuï sense bloquejar-lo.
+    asyncio.ensure_future(bucle_principal())
+else:
+    # Terminal: no hi ha cap loop, se'n crea un i s'hi espera.
+    asyncio.run(bucle_principal())
+</code></pre><button class="copy-code-btn" data-code-index="18">📋</button></div>
+<blockquote style="border-left: 4px solid #3498db; padding-left: 15px; margin-left: 0; color: #555; font-style: italic; margin: 1em 0; ">
+<p style="margin: 0.5em 0; line-height: 1.6; ">⚠️ <strong style="font-weight: bold; color: #2c3e50; ">Important — aquest patró trenca el botó "Interromp" a l'IDE.</strong><br>Amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.ensure_future()</code>, el codi de nivell superior acaba<br>d'executar-se de seguida (només ha programat la tasca), i "Interromp"<br>deixa de tenir res a interrompre — la feina continua igualment per sota,<br>però ja no es pot aturar amb el botó (comprovat empíricament amb els<br>exemples <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mqtt_publica</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mqtt_subscriu</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">mqtt_pub_sub</code>).</p>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; ">Si el programa es tanca amb la X de la finestra tkinter (com<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">tk_mqtt_smm</code>), aquest patró és perfecte: no cal "Interromp".</li>
+<li style="margin: 0.5em 0; ">Si és una demo curta que s'atura sovint amb "Interromp" (típic dels<br>exemples MQTT sols, sense finestra), <strong style="font-weight: bold; color: #2c3e50; ">no apliquis aquest patró al<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">main.py</code> del navegador</strong>. Deixa'l tal com estava (amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">await</code> solt) i<br>posa la versió amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">async def</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">asyncio.run()</code> en un <strong style="font-weight: bold; color: #2c3e50; ">fitxer a part</strong><br>(per exemple <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">elteu_exemple_terminal.py</code>), pensat només per executar<br>des de terminal. Val més duplicar unes poques línies que perdre la<br>capacitat d'aturar l'execució amb un clic.</li>
+</ul>
+</blockquote>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">13.2. Variables per URL → arguments de terminal</h3>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Al navegador, les variables del hash (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">&amp;clau=valor</code>) arriben com a globals<br>(secció 3). Al terminal, l'equivalent natural és passar-les com a arguments<br>de la línia d'ordres amb el mateix format <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">clau=valor</code>:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">python3 elteu_fitxer.py topic=alumne07-a3f9c2 sid=binefaJordi
+</code></pre><button class="copy-code-btn" data-code-index="19">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Es poden llegir totes amb una única funció <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">valor_inicial()</code> que miri a<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">sys.argv</code> quan no estàs al navegador:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">import sys
+
+def _parseja_args_terminal():
+    args = {}
+    for arg in sys.argv[1:]:
+        if "=" in arg:
+            clau, valor = arg.split("=", 1)
+            args[clau] = valor
+    return args
+
+_args_terminal = {} if _dins_navegador else _parseja_args_terminal()
+
+def valor_inicial(nom_variable, per_defecte):
+    if _dins_navegador:
+        return globals()[nom_variable] if nom_variable in globals() else per_defecte
+    return _args_terminal.get(nom_variable, per_defecte)
+</code></pre><button class="copy-code-btn" data-code-index="20">📋</button></div>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">13.3. Rutes de fitxers (imatges, assets)</h3>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Al navegador, els assets del projecte es desen a l'arrel del sistema de<br>fitxers virtual (<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">/nom.png</code>). Al terminal, un fitxer normalment és al mateix<br>directori que l'script, <strong style="font-weight: bold; color: #2c3e50; ">no necessàriament</strong> al directori de treball<br>actual (des d'on s'executa la comanda). Si el teu codi obre fitxers<br>directament amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">open(...)</code> (no via <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">PhotoImage(file=...)</code>, que ja gestiona<br>això sol), cal triar la ruta segons l'entorn:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">import os
+
+def ruta_asset(nom_fitxer):
+    if _dins_navegador:
+        return "/" + nom_fitxer
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), nom_fitxer)
+</code></pre><button class="copy-code-btn" data-code-index="21">📋</button></div>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">13.4. MQTT + tkinter real: cal una cua entre fils</h3>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Aquesta és la diferència més fàcil de passar per alt. Al navegador, el shim<br>de MQTT crida els teus <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_connect</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">on_message</code>/etc. <strong style="font-weight: bold; color: #2c3e50; ">al mateix i únic<br>fil</strong> que tkinter — per això tot el codi dels exemples toca <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Label</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Button</code><br>directament dins d'aquests callbacks sense cap problema.</p>
+<p style="margin: 0.5em 0; line-height: 1.6; ">Al terminal, amb <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">paho-mqtt</code> real i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">client.loop_start()</code>, aquests callbacks<br>s'executen en un <strong style="font-weight: bold; color: #2c3e50; ">fil separat</strong>. tkinter real <strong style="font-weight: bold; color: #2c3e50; ">no és thread-safe</strong>: tocar<br>un widget des d'un altre fil peta amb:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">RuntimeError: main thread is not in main loop
+</code></pre><button class="copy-code-btn" data-code-index="22">📋</button></div>
+<p style="margin: 0.5em 0; line-height: 1.6; ">La solució (i és segura fer-la servir també al navegador, on només afegeix<br>com a màxim un cicle de retard —uns 50ms—, ja que allà no hi ha fils reals)<br>és fer que els callbacks de MQTT només deixin un missatge a una<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">queue.Queue()</code>, i que sigui el bucle principal (fil de tkinter) qui la<br>buidi i apliqui els canvis:</p>
+<div class="code-block-wrapper"><pre style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 3px solid #3498db; margin: 1em 0; "><code class="language-python" style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">import queue
+cua_mqtt = queue.Queue()
+
+def on_message(c, userdata, msg):
+    cua_mqtt.put(("missatge", msg.topic, msg.payload))
+    # MAI tocar cap widget aquí directament
+
+async def bucle_principal():
+    while True:
+        finestra.update()
+        while True:
+            try:
+                event = cua_mqtt.get_nowait()
+            except queue.Empty:
+                break
+            if event[0] == "missatge":
+                processa_missatge(event[1], event[2])   # aquí sí que es pot tocar tkinter
+        await asyncio.sleep(0.05)
+</code></pre><button class="copy-code-btn" data-code-index="23">📋</button></div>
+<h3 style="font-size: 1.25em; color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: bold; ">13.5. Altres detalls petits a tenir en compte</h3>
+<ul style="padding-left: 30px; margin: 1em 0; ">
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; ">Tancar la finestra amb la X</strong>: el shim NO implementa <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Tk.protocol()</code><br>(no cal a l'iframe). Crida <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">finestra.protocol("WM_DELETE_WINDOW", ...)</code><br>només quan <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">not _dins_navegador</code>, o petarà al navegador amb<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">AttributeError</code>.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Label.config(image=..., text=...)</code> alhora</strong>: al shim, passar <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">image=</code><br>i <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">text=</code> junts en una mateixa crida a <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">config()</code> fa que la imatge no es<br>vegi. Si un <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">Label</code> mostra imatges dinàmiques, no hi barregis mai<br><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">text=""</code> — crida <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">config(image=...)</code> sol.</li>
+<li style="margin: 0.5em 0; "><strong style="font-weight: bold; color: #2c3e50; "><code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">PhotoImage</code> sense <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">subsample()</code>/<code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: &quot;Courier New&quot;, monospace; color: #e74c3c; ">zoom()</code></strong>: si el teu codi redimensiona<br>imatges en temps real amb aquests mètodes (tkinter real els té), no<br>funcionaran al shim. Cal preparar les imatges ja a la mida final abans de<br>pujar-les (per exemple amb ImageMagick) en lloc de redimensionar-les en<br>temps d'execució.</li>
+</ul>
+
+    </div>
+    
+    <script>
+        // Funcionalitat per copiar blocs de codi
+        document.addEventListener('DOMContentLoaded', function() {
+            // Afegir event listeners a tots els botons de còpia
+            const copyButtons = document.querySelectorAll('.copy-code-btn');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    copyCodeBlock(this);
+                });
+            });
+        });
+        
+        function copyCodeBlock(button) {
+            const wrapper = button.closest('.code-block-wrapper');
+            const pre = wrapper.querySelector('pre');
+            const code = pre.textContent;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(() => {
+                    button.classList.add('copied');
+                    button.innerHTML = '✓ Copiat';
+                    
+                    setTimeout(() => {
+                        button.classList.remove('copied');
+                        button.innerHTML = '📋';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error en copiar:', err);
+                    copyCodeBlockFallback(code, button);
+                });
+            } else {
+                copyCodeBlockFallback(code, button);
+            }
+        }
+        
+        function copyCodeBlockFallback(text, button) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                button.classList.add('copied');
+                button.innerHTML = '✓ Copiat';
+                
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    button.innerHTML = '📋';
+                }, 2000);
+            } catch (err) {
+                console.error('Error en copiar el codi');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+    </script>
+    
+</body>
+</html>

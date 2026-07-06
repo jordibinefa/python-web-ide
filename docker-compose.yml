@@ -1,0 +1,20 @@
+services:
+  py-web:
+    image: nginx:alpine
+    container_name: py-web
+    restart: unless-stopped
+    volumes:
+      - ./www:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.py-web.rule=Host(`py.binefa.cat`)"
+      - "traefik.http.routers.py-web.entrypoints=https"
+      - "traefik.http.routers.py-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.py-web.loadbalancer.server.port=80"
+
+networks:
+  proxy:
+    external: true
